@@ -4,7 +4,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+//hola amigos como estan! si verdad!
 public class SimuladorImpl extends UnicastRemoteObject
    implements SimuladorInterfaz {
       final int TOTAL_CLIENTES = 5, TOTAL_PAQUETES = 30, TOTAL_PROCESOS = 30; //variables constantes
@@ -45,5 +45,27 @@ public class SimuladorImpl extends UnicastRemoteObject
    }
    public void administrarProceso(){//se encarga de administrar el destino de los procesos a ejecutar
 
+   }
+}
+public class Paquete {
+   int identificador;
+   Procesos proceso;
+   boolean procesoExiste;//banderas
+   public Paquete(int identificador, Procesos proceso, boolean procesoExiste){
+       this.identificador = identificador;
+       this.proceso = proceso;
+       this.procesoExiste = procesoExiste;
+   }
+}
+class Procesos{ /*Entradas de usuario*/
+   String nombre;  //nombre proceso
+   int totalPaginas;  //total de paginas que tendra el proceso (diferente al total de invocaciones)
+   String orden;    // orden de las invocaciones 
+   int n_inv;		//numero de invocaciones (solo usada en una funcion)
+   public Procesos(String nombre, int totalPaginas, String orden, int n_inv){
+       this.nombre = nombre;
+       this.totalPaginas = totalPaginas;
+       this.orden = orden;
+       this.n_inv = n_inv;
    }
 }
