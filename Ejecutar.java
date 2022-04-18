@@ -1,4 +1,6 @@
 import static java.lang.Math.*;
+
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 class Memorias{ /*Entradas de usuario*/
@@ -39,7 +41,7 @@ class Registro{ /*Entradas de la tabla de paginas*/
 }
 public class Ejecutar{
     int TOTAL_P = 30, TOTAL_PAG = 50, AUX = 50;
-    String[] listaProcesosDespachar = new String[30]; //arreglo que contiene el orden de los procesos a despachar
+    
     int[] registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
     Procesos[] proceso = new Procesos[30];
     Memorias memorias;
@@ -137,15 +139,31 @@ public class Ejecutar{
         }
     }
     //pide datos de entrada: Respecto al proceso
-    int pedirDatos(int cont){//se tiene que lanzar como promt 
-	char c;
-	int aux = 1, i = 0, total = 0, j = 0, total_referencias;
-	cont++;//la variable cont se usara para poder llevar un control del total de proceso añadidos por el usuario
-	return cont;
+    int registrarDatos(String comando, String[] listaProcesosDespachar, int[] contProcesosAct){//se tiene que lanzar como promt 
+        Procesos procesoNuevo;
+        int indicePrimerEspacio = 0, indiceSegundoEspacio = 0;
+        char[] numPaginas = {};
+        for(int i = 0; i < comando.length(); i++){
+            if(comando.charAt(i) == ' '){
+                indicePrimerEspacio = i;
+                break;
+            }
+        }
+        procesoNuevo.nombre = comando.substring(0, indicePrimerEspacio);
+        for(int i = indicePrimerEspacio + 1; i < comando.length(); i++){
+            if(comando.charAt(i) == ' '){
+                indiceSegundoEspacio = i;
+                break;
+            }
+        }
+        procesoNuevo.totalPaginas = cadenaToEntero(comando.substring(indicePrimerEspacio + 1, indiceSegundoEspacio).toCharArray());
+        procesoNuevo.orden = comando.substring(indiceSegundoEspacio + 1, comando.length());
+	    listaProcesosDespachar[contProcesosAct] = procesoNuevo[contProcesosAct].nombre;//anade el nuevo proceso a la lista de proceso a despachar
+	    return procesoNuevo;
     }
     //llenar las estructuras correspondientes
     void anadirProcesoEstructuras(int contador){
-	listaProcesosDespachar[contador-1] = proceso[contador-1].nombre;//anade el nuevo proceso a la lista de proceso a despachar
+	
     }
     //calcula la direccion en base 2, 10 y 16
     void direccionBases(int pagmar, int bitspagmar, int desplazamiento, int bitsDesplazamiento, int dirBin[], /*int* dirDec,*/ char dirHex[]){ //que se modifique la variable
@@ -194,28 +212,8 @@ public class Ejecutar{
             }
             return bits;
     }
-    //traduce los datos pasados como parametos en sus correspondientes bases, regresa ya sea la direccion virtual o la direccion fisica
-    /*void traducir(int pagmar, int bitspagmar, int desplazamiento, int bitsDesplazamiento, int dirBin[], int dirDec, char dirHex[]){
-            int i;
-            direccionBases(pagmar, bitspagmar, desplazamiento, bitsDesplazamiento, dirBin, &dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
-            printf("\n Binaria: ");
-        for(i = 0; i < bitsDesplazamiento + bitspagmar; i++){
-            printf("%i", dirBin[i]);
-        }
-        printf("\n Decimal: %d", dirDec);
-        printf("\n Hexadecimal: ");
-        for(i = 0; i < 30; i++){
-            if(dirHex[i] != 'G'){
-                printf("%c", dirHex[i]);
-            }else{
-                break;
-            } 
-        }
-            printf("\n");
-            // Imprime dirBin, dirDec, dirHex	
-    }*/
     //hace la siguiente referencia del proceso en cuestion
-    void realizarReferencia(int indiceProceso, int memFisica[]){
+    void realizarReferencia(int indiceProceso, int memFisica[], Memorias memorias){
             int pagmar, desplazamiento, bitspagmar, bitsDesplazamiento, dirDec, memFi;
             int[] dirBin = new int[30];
             char[] dirHex = new char[30];
@@ -400,7 +398,7 @@ public class Ejecutar{
             /**************************/
     }
     //hace la simulacion del quantum -> 3 segundo -> 1 segundo = 1 referencia
-    int quantum(int contador, int indice_proceso, int memFisica[]) throws InterruptedException{
+    int quantum(int contador, int indice_proceso, int memFisica[], Memorias memorias) throws InterruptedException{
         int cont = 0, j = 0, total_referencias;
         //calcula el total de invocaciones restantes
         for(j = 0; j < proceso[indice_proceso].orden.length(); j++){
@@ -412,7 +410,7 @@ public class Ejecutar{
         cont = 1;
         //ciclo donde se hara la simulacion del quantum
         while(total_referencias > 0 && cont <= 3){
-            realizarReferencia(indice_proceso, memFisica); //solo hace una referencia
+            realizarReferencia(indice_proceso, memFisica, memorias); //solo hace una referencia
             total_referencias--;
             TimeUnit.SECONDS.sleep(1);
             cont++;
@@ -452,7 +450,7 @@ public class Ejecutar{
             return total_referencias;
     }
     //despacha al proceso dentro de la opcion 2 del menu
-    int despacharProceso(int contador, int memFisica[]) throws InterruptedException{
+    int despacharProceso(int contador, int memFisica[], Memorias memorias) throws InterruptedException{
         int indice_proceso = 0, cont = 0, aux=0, pos, aux2=0, total_referencias = 3;
         int[] total_ref = new int[TOTAL_PAG];
         String aux_arg = "";
@@ -505,7 +503,7 @@ public class Ejecutar{
                 break;
             }
         }
-        total_referencias = quantum(contador, indice_proceso, memFisica); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
+        total_referencias = quantum(contador, indice_proceso, memFisica, memorias); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
         if(total_referencias == 0){//si el proceso ha sido eliminado, se decrementa el contador que lleva el control del total de proceso existentes
             contador--;
         }
@@ -526,33 +524,19 @@ public class Ejecutar{
         return contadorTabla;
     }
     //menu del programa
-    Proceso prompt(int contProcesosAct,memorias) throws InterruptedException{
+    Proceso prompt(int[] contProcesosAct,int[] contadorTabla, Memorias memorias, String[] listaProcesosDespachar) throws InterruptedException{
         Procesos procesoNuevo; //proceso que reciba el cliente
-        int opc = 0, contador = 0,contadorTabla = 0;
             int[] memFisica = new int[memorias.tamMemFis]; //variable de la memoria fisica
             int memFi = 0;
+            String comando = "";
             for (memFi = 0; memFi < memorias.tamMemFis; memFi++)
                     memFisica[memFi] = 0;
-        while (opc != 3){
-            //prompt
-            switch (opc){
-            case 1: /*Añadir nuevo proceso*/
-            contProcesosAct = pedirDatos(contProcesosAct);//pide datos de proceso
-                contadorTabla = anadirProcesoTablaPaginas(contProcesosAct, contadorTabla);//se añaden las paginas a la tabla de paginas
-                anadirProcesoEstructuras(contProcesosAct);//se añade el proceso a la estructura ya indicada
-                break;
-
-            case 2: /*Despachar proceso*/
-                if(contProcesosAct > 0){
-                    contProcesosAct = despacharProceso(contProcesosAct, memFisica);
-                }else{
-                    //printf(ROJO_T"\n No hay procesos.\n"RESET_COLOR);
-                }
-                break;
-            default:
-                break;
-            }
-        }
+            Scanner entrada = new Scanner();
+            System.out.println("> ");
+            comando = entrada.nextLine();
+            procesoNuevo = registrarDatos(comando, listaProcesosDespachar, contProcesosAct[0]);//pide datos de proceso
+            contadorTabla[0] = anadirProcesoTablaPaginas(contProcesosAct[0], contadorTabla[0]);//se añaden las paginas a la tabla de paginas
+            contProcesosAct[0]++;
         return procesoNuevo;  
     }
 }
