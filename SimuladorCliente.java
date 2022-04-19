@@ -12,6 +12,7 @@ public class SimuladorCliente{
         }
         try {
             Paquete paquete;
+            Datos datos = new Datos(contProcesosAct, registroTablaPaginas, listaProcesosDespachar, tablaPagina);
             Procesos[] procesosPendientes = new Procesos[30];
             int TOTAL_PROCESOS = 30;
             String[] listaProcesosDespachar = new String[TOTAL_PROCESOS]; //arreglo que contiene el orden de los procesos a despachar
@@ -31,12 +32,11 @@ public class SimuladorCliente{
                 sInterfaz
             ); //Creacion de Objeto e inicio del hilo
             interfaz.start();
-            Ejecutar ejProceso = new Ejecutar(interfaz, memorias);
+            Ejecutar ejProceso = new Ejecutar(memorias,datos);
             interfaz.setEjProceso(ejProceso);
             ejProceso.start();
             
             idCliente = sInterfaz.registrar(nombre);
-            
             sInterfaz.actualizar(carga);
             sInterfaz.actualizaProceso(carga);
 
@@ -44,15 +44,5 @@ public class SimuladorCliente{
             System.err.println("Servidor excepcion: "+ e.getMessage());
             e.printStackTrace();
         }
-    }
-}
-public class Paquete {
-    int identificador;
-    Procesos proceso;
-    boolean procesoExiste;//banderas
-    public Paquete(int identificador, Procesos proceso, boolean procesoExiste){
-        this.identificador = identificador;
-        this.proceso = proceso;
-        this.procesoExiste = procesoExiste;
     }
 }

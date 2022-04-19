@@ -10,37 +10,41 @@ public class Ejecutar extends Thread{
     Memorias memorias;
     Registro[] tablaPaginas = new Registro[50];
     int[] memFisica = new int[memorias.tamMemFis]; //variable de la memoria fisica
-    int memFi = 0;
-    SimuladorPrompt interfaz;
     String[] listaProcesosDespachar;
-    public Ejecutar(SimuladorPrompt interfaz, Memorias memorias){
-        for (memFi = 0; memFi < memorias.tamMemFis; memFi++)
-            memFisica[memFi] = 0;
-        this.interfaz = interfaz;
+    Datos datos;
+    public Ejecutar(Memorias memorias, Datos datos){
+        for (int i = 0; i < memorias.tamMemFis; i++)
+            memFisica[i] = 0;
         this.memorias = memorias;
+        this.datos = datos;
     }
     //Anade las paginas del proceso nuevo a la tabla de paginas
-    run(){
-        int contadorProcesoAux = contProcesosAct[0];
+    public void run(){
         while(true){
-            contProcesosAct = interfaz.getContProcesosAct();
-            listaProcesosDespachar = interfaz.getListaProcesosDespachar();
-            if(contadorProcesoAux != 0){
-                contadorProcesoAux = despacharProceso(contProcesosAct, listaProcesosDespachar);
-            }else{
-                break;
+            if(datos.getProcesosPendientes() == true){
+                contProcesosAct = datos.getContProcesosAct();
+                listaProcesosDespachar = datos.getListaProcesosDespachar();
+                if(contProcesosAct[0] != 0){
+                    try{
+                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar));
+                    }catch(InterruptedException e){
+                        throw new RuntimeException(e);
+                    };
+                }else{
+                    datos.setProcesosPendientes(false);
+                    break;
+                }
             }
         }
-        return proceso;
     }
     //funcion para traducir de decimal a binario
     public void decimalBinario(int decimal, int binario[], int totalBits){ 
-    float cociente, residuo;
-    int i, valor = decimal, cont = totalBits-1, k;
-    for(k = 0; k < totalBits; k++){//inicializa en 0's el arreglo donde se almacenara el numero en binario
+    float residuo;
+    int cont = totalBits-1;
+    for(int k = 0; k < totalBits; k++){//inicializa en 0's el arreglo donde se almacenara el numero en binario
 	    binario[k] = 0;
     }                                        
-    for(i = 0; i < totalBits-1; i++){ //genera los bits representativos del valor decimal
+    for(int i = 0; i < totalBits-1; i++){ //genera los bits representativos del valor decimal
         residuo = decimal % 2;
         decimal = decimal / 2;
         binario[cont] = (int)residuo;
@@ -50,8 +54,8 @@ public class Ejecutar extends Thread{
 }
     //funcion para traducir de binario a decimal
     int binarioDecimal(int binario[], int totalValores){
-        int decimal = 0, i, cont = 0;
-        for(i = totalValores - 1; i >= 0; i--){
+        int decimal = 0, cont = 0;
+        for(int i = totalValores - 1; i >= 0; i--){
             if(binario[i] == 1)
                 decimal = (int) (decimal + pow(2,cont));//se basa en la elevacion al cuadrado segun la posicion y si el "bit" esta encendido
             cont++;
@@ -60,12 +64,12 @@ public class Ejecutar extends Thread{
     }
     //funcion que pasa de binario a Hexadecximal
     void binarioHexadecimal(int dirBin[], int bitsBin, char dirHex[]){
-        int i, cont = 3, valor, cont2 = 0, j;
+        int cont = 3, valor, cont2 = 0;
         int[] aux = new int[4], dirAux = new int[30];
-        for(i = 0; i < 4; i++){//inicializa un arreglo auxiliar en 0's, sera para almacenar en grupos de 4 bits y pasarlo a hecadecimal
+        for(int i = 0; i < 4; i++){//inicializa un arreglo auxiliar en 0's, sera para almacenar en grupos de 4 bits y pasarlo a hecadecimal
             aux[i] = 0;
         }
-        for(i = bitsBin - 1; i >= 0; i--){
+        for(int i = bitsBin - 1; i >= 0; i--){
             if(cont >= 0){
                 aux[cont] = dirBin[i];
                 cont--;
@@ -109,7 +113,7 @@ public class Ejecutar extends Thread{
                 }
                 cont2++;
                 cont = 3;
-                for(j = 0; j < 4; j++){
+                for(int j = 0; j < 4; j++){
                     aux[j] = 0;
                 }
             }
@@ -117,38 +121,38 @@ public class Ejecutar extends Thread{
         dirHex[cont2] = 'G';
         dirAux[cont2] = 'G';//se usa una G para indicar el final del numero Hexadecimal
         cont = 0;
-        for(i = cont2 - 1; i >= 0; i--){
+        for(int i = cont2 - 1; i >= 0; i--){
             dirHex[cont] = (char)dirAux[i];
             cont++;
         }
     }
         //traduce los datos pasados como parametos en sus correspondientes bases, regresa ya sea la direccion virtual o la direccion fisica
-    void traducir(int pagmar, int bitspagmar, int desplazamiento, int bitsDesplazamiento, int dirBin[], int[] dirDec, char dirHex[]){
-            int i;
-            direccionBases(pagmar, bitspagmar, desplazamiento, bitsDesplazamiento, dirBin, &dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
-            printf("\n Binaria: ");
-        for(i = 0; i < bitsDesplazamiento + bitspagmar; i++){
-            printf("%i", dirBin[i]);
+    void traducir(int indicePagMar, int bitsPagMar, int desplazamiento, int bitsDesplazamiento, int[] dirBin, int[] dirDec, char[] dirHex){
+        int i;
+        direccionBases(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+        System.out.println(" Binaria: ");
+        for(i = 0; i < bitsDesplazamiento + bitsPagMar; i++){
+            System.out.print(dirBin[i]);
         }
-        printf("\n Decimal: %d", dirDec);
-        printf("\n Hexadecimal: ");
+        System.out.println(" Decimal: "+dirDec[0]);
+        System.out.println(" Hexadecimal: ");
         for(i = 0; i < 30; i++){
             if(dirHex[i] != 'G'){
-                printf("%c", dirHex[i]);
+                System.out.print(dirHex[i]);
             }else{
                 break;
             } 
         }
-            printf("\n");
-            // Imprime dirBin, dirDec, dirHex	
+        System.out.println();
+            //Imprime dirBin, dirDec, dirHex	
     }
     //calcula la direccion en base 2, 10 y 16
-    void direccionBases(int pagmar, int bitspagmar, int desplazamiento, int bitsDesplazamiento, int dirBin[], /*int* dirDec,*/ char dirHex[]){ //que se modifique la variable
+    void direccionBases(int indicePagMar, int bitsPagMar, int desplazamiento, int bitsDesplazamiento, int[] dirBin, int[] dirDec, char[] dirHex){ //que se modifique la variable
         int i, cont = 0, aux = 9;
-        int[] aux1 = new int[bitspagmar], aux2 = new int[bitsDesplazamiento];
-        decimalBinario(pagmar,aux1,bitspagmar);//pasa a binario el indice de pagina o el indices de marco, segun se solicite
-        decimalBinario(desplazamiento,aux2,bitsDesplazamiento);//pasa a binario el desplazamiento de la pagina o del marco, segun se solicite
-        for(i = 0; i < bitspagmar; i++){//añade al arreglo dirBin[], primero los bits de la pagina o el marco
+        int[] aux1 = new int[bitsPagMar], aux2 = new int[bitsDesplazamiento];
+        decimalBinario(indicePagMar, aux1, bitsPagMar);//pasa a binario el indice de pagina o el indices de marco, segun se solicite
+        decimalBinario(desplazamiento, aux2, bitsDesplazamiento);//pasa a binario el desplazamiento de la pagina o del marco, segun se solicite
+        for(i = 0; i < bitsPagMar; i++){//añade al arreglo dirBin[], primero los bits de la pagina o el marco
             dirBin[cont] = aux1[i];
             cont++;
         }
@@ -156,9 +160,8 @@ public class Ejecutar extends Thread{
             dirBin[cont] = aux2[i];
             cont++;
         }
-        aux = binarioDecimal(dirBin,bitspagmar+bitsDesplazamiento);//pasa de binario a decimal
-        //*dirDec = aux;//se le asigna a la variable correspondiente el valor decimal
-        binarioHexadecimal(dirBin, bitspagmar + bitsDesplazamiento, dirHex);//pasa de binario a Hexadecimal
+        dirDec[0] = binarioDecimal(dirBin, bitsPagMar + bitsDesplazamiento);//pasa de binario a decimal
+        binarioHexadecimal(dirBin, bitsPagMar + bitsDesplazamiento, dirHex);//pasa de binario a Hexadecimal
     }
     //calcula la longitud de una cadena
     int longitudCadena(char cadena[]){
@@ -190,17 +193,10 @@ public class Ejecutar extends Thread{
             return bits;
     }
     //hace la siguiente referencia del proceso en cuestion
-    void realizarReferencia(int indiceProceso, int memFisica[], Memorias memorias){
-            int pagmar, desplazamiento, bitspagmar, bitsDesplazamiento, memFi;
+    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias){
+            int indicePagMar = 0, desplazamiento = 0, bitsPagMar = 0, bitsDesplazamiento = 0; 
             int[] dirBin = new int[30], dirDec = {};
             char[] dirHex = new char[30];
-            for (memFi = 0; memFi < memorias.tamMemFis; memFi++)//imprime la estructura de la memoria fisica, cada bit representa un byte
-                    //printf("|%d", memFisica[memFi]);
-
-            pagmar = 0; //va a contener el valor entero ya sea, del indice de la pagina o del indice del marco para pagina
-            desplazamiento = 0;//va a contener el valor entero del desplazamiento
-            bitspagmar = 0;//contendra los bits necesarios para direccionar ya sea una pagina o un marco
-            bitsDesplazamiento = 0;//contendra el total de bits para direccionar el desplazamiento
 
             desplazamiento = memorias.tamPag;//asginacion para saber cual es el tamño de la pagina
             bitsDesplazamiento = contadorBits(desplazamiento);//en base a la asignacion anterior se obtien el total de bits
@@ -217,11 +213,11 @@ public class Ejecutar extends Thread{
 
             // Buscar el nombre del proceso a despachar
             String nombre = "";
-            nombre = proceso[indiceProceso].nombre;
+            nombre = proceso[indiceProcesoDespachar].nombre;
             int i = 0, indice = 0;
             for (i = 0; i < 3; i++){
                     if (listaProcesosDespachar[i] == nombre){
-                            //printf("\n\n Proceso encontrado: %s", listaProcesosDespachar[i]);
+                            System.out.println(" Proceso encontrado: "+listaProcesosDespachar[i]);
                             indice = i;
                             break;
                     }
@@ -238,24 +234,25 @@ public class Ejecutar extends Thread{
             int desplazamientoInt = 0;
 
             char[] registroOrdenRemplazo = new char[100];
-            registroOrdenRemplazo = proceso[indiceProceso].orden.toCharArray();
+            registroOrdenRemplazo = proceso[indiceProcesoDespachar].orden.toCharArray();
             /* Encontrar el primer Orden desplazamiento*/
             int indiceFinal = 0;
             for(int k = 0; k < registroOrdenRemplazo.length; k++){
                 if(registroOrdenRemplazo[k] == ',');
                     indiceFinal = k;
             }
-            char[] ordenDesplazamiento = proceso[indiceProceso].orden.substring(0, indiceFinal).toCharArray();//almacena la primera invocacion
+            char[] ordenDesplazamiento = proceso[indiceProcesoDespachar].orden.substring(0, indiceFinal).toCharArray();//almacena la primera invocacion
             /*Longitud del arreglo encontrado ordenDesplazamiento*/
             int longOrdenDes = 1; /* El tamaño toma en cuenta la coma, incrementando a 1 */
             i = 0;
-            longOrdenDes += longitudCadena(ordenDesplazamiento);
+            //longOrdenDes += longitudCadena(ordenDesplazamiento);
+            String lg = String.valueOf(ordenDesplazamiento);
+            longOrdenDes += lg.length();
             /*Separar Orden de desplazamiento (Tomar en cuenta el 1 añadido)*/
             char[] desplazamientoSep = new char[5];// = {'\0'};
             char[] numeroPaginaSep = new char[2]; // = {'\0'};
             int bandera = 0;
-            /**/
-            /*Separacion de varibale*/
+            /*Separacion de variable*/
             int contadorArreglo = 0;
             for (i = 0; i < longOrdenDes - 1; i++){
                     if (ordenDesplazamiento[i] == ' '){//si en el arreglo de caracteres que contiene la primera invocacion, encuentra un espacio, quiere decir que lo que continua es el desplazamiento
@@ -273,7 +270,7 @@ public class Ejecutar extends Thread{
             /*Convertir la cadenas a int, tanto el numero de pagina como el numero de desplazamiento*/
             numpaginaInt = cadenaToEntero(numeroPaginaSep);
             desplazamientoInt = cadenaToEntero(desplazamientoSep);
-            //printf("\n Num. Pagina : %d, Desplazamiento : %d\n", numpaginaInt, desplazamientoInt);
+            System.out.println(" Num. Pag: "+numpaginaInt+", Desplazamiento: "+desplazamientoInt);
 
             /*******************************************************************************************************/
 
@@ -281,16 +278,16 @@ public class Ejecutar extends Thread{
             /* se Usara -> numpaginaInt, desplazamientoInt */
 
             /*Imprimir Direccion Virtual*/
-            pagmar = numpaginaInt;
-            bitspagmar = bitsNumPagVirtual;
+            indicePagMar = numpaginaInt;
+            bitsPagMar = bitsNumPagVirtual;
             desplazamiento = desplazamientoInt;
             /* bitsDesplazamiento se declaro al inicio */
-            //printf(AZUL_T"\n Direccion Virtual"RESET_COLOR);
-            traducir(pagmar, bitspagmar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+            System.out.println(" Direccion Virtual: ");
+            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
             /*********************************/
             /*Buscara la pagina en memoria fisica*/
             if (tablaPaginas[posPagToReferencia+numpaginaInt].presen_ausen == 0){ /*No se encuentra*/
-                    //printf(MAGENTA_T "\n FALLO DE PAGINA\n " RESET_COLOR);
+                    System.out.println(" FALLO DE PAGINA: ");
                     int BitsLibres = 0;
                     int marcoPaginaIndice = 0;
                     for (i = 0; i < memorias.tamMemFis; i += memorias.tamPag){//busca espacios libres en memoria fisica
@@ -309,12 +306,12 @@ public class Ejecutar extends Thread{
                             tablaPaginas[posPagToReferencia+numpaginaInt].presen_ausen = 1;
                             tablaPaginas[posPagToReferencia+numpaginaInt].referida = 1;
                             tablaPaginas[posPagToReferencia+numpaginaInt].num_marco = marcoPaginaIndice;
-                            pagmar = marcoPaginaIndice;
-                            bitspagmar = bitsMarcoFisica;
+                            indicePagMar = marcoPaginaIndice;
+                            bitsPagMar = bitsMarcoFisica;
                             /* desplazamiento se declaro en Imprimir direccion virtual */
                             /* bitsDesplazamiento se declaro al inicio */
-                            //printf(AZUL_T"\n Direccion Fisica"RESET_COLOR);//se imprime la direccion fisica despues de ingresar la pagina a memoria
-                            //traducir(pagmar, bitspagmar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                            System.out.println(" Direccion Fisica: ");
+                            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
                     }
                     else{ /*No se encuentra libre un marco*/
                             /*Eliminar una pagina que este en el marco aleatoriamente*/
@@ -340,71 +337,66 @@ public class Ejecutar extends Thread{
                             tablaPaginas[posPagToReferencia+numpaginaInt].referida = 1;
                             tablaPaginas[posPagToReferencia+numpaginaInt].num_marco = randomEliminaMarco;
 
-                            pagmar = tablaPaginas[posPagToReferencia].num_marco;
-                            bitspagmar = bitsMarcoFisica;
+                            indicePagMar = tablaPaginas[posPagToReferencia].num_marco;
+                            bitsPagMar = bitsMarcoFisica;
                             /* desplazamiento se declaro en Imprimir direccion virtual */
                             /* bitsDesplazamiento se declaro al inicio */
                             /* Imprimir la direccion fisica*/
-                            //printf(MAGENTA_T "\n FALLO DE PAGINA\n " RESET_COLOR);
-                            //printf(AZUL_T"\n Direccion Fisica"RESET_COLOR);
-                            traducir(pagmar, bitspagmar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                            System.out.println(" FALLO DE PAGINA: ");
+                            System.out.println(" Direccion Fisica: ");
+                            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
                     }
             }
             else{	/*Se encuentra en memoria fisica la pagina- Imprimir la memoria Fisica*/
-                    /* Imprime Mapa de bits*/
-                    //printf(AZUL_T"\n MAPA - MEMORIA FISICA \n"RESET_COLOR);
-                    for (memFi = 0; memFi < memorias.tamMemFis; memFi++)
-                            //printf("|%d", memFisica[memFi]);
-
+                    
                     /*Imprimir la direccion fisica*/
-                    pagmar = tablaPaginas[posPagToReferencia].num_marco;
-                    bitspagmar = bitsMarcoFisica;
+                    indicePagMar = tablaPaginas[posPagToReferencia].num_marco;
+                    bitsPagMar = bitsMarcoFisica;
                     /* desplazamiento se declaro en Imprimir direccion virtual */
                     /* bitsDesplazamiento se declaro al inicio */
-                    //printf(MAGENTA_T "\n YA ESTABA EN MEMORIA FISICA " RESET_COLOR);
-                    //printf(AZUL_T"\n Direccion Fisica"RESET_COLOR);
-                    traducir(pagmar, bitspagmar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                    System.out.println(" YA ESTABA EN MEMORIA FISICA: ");
+                    System.out.println(" Direccion Fisica: ");
+                    traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
                     tablaPaginas[posPagToReferencia].referida = 1;
             }
             /*- debera de modificar el la entrada que le pertenece a dicho proceso en la tabla de paginas 	*/
 
             /*Eliminar la invocacion de la variable registro[indiceProceso] */
             /* El 0 se cambia por indiceProceso*/
-            String vacio = proceso[indiceProceso].orden.substring(indiceFinal);
-            proceso[indiceProceso].orden = vacio;
+            String vacio = proceso[indiceProcesoDespachar].orden.substring(indiceFinal);
+            proceso[indiceProcesoDespachar].orden = vacio;
             /**************************/
     }
     //hace la simulacion del quantum -> 3 segundo -> 1 segundo = 1 referencia
-    int quantum(int contador, int indice_proceso, int memFisica[], Memorias memorias) throws InterruptedException{
-        int cont = 0, j = 0, total_referencias;
+    int quantum(int[] contPaquetesAct, int indiceProcesoDespachar, int memFisica[], Memorias memorias) throws InterruptedException{
+        int contReferencias = 0, j = 0, total_referencias = 0;
         //calcula el total de invocaciones restantes
-        for(j = 0; j < proceso[indice_proceso].orden.length(); j++){
-            if(proceso[indice_proceso].orden.charAt(j) == ','){
-                cont++;
+        for(j = 0; j < proceso[indiceProcesoDespachar].orden.length(); j++){
+            if(proceso[indiceProcesoDespachar].orden.charAt(j) == ','){
+                contReferencias++;
             }
         }
-        total_referencias = cont;
-        cont = 1;
+        total_referencias = contReferencias;
+        contReferencias = 1;
         //ciclo donde se hara la simulacion del quantum
-        while(total_referencias > 0 && cont <= 3){
-            realizarReferencia(indice_proceso, memFisica, memorias); //solo hace una referencia
+        while(total_referencias > 0 && contReferencias <= 3){
+            realizarReferencia(indiceProcesoDespachar, memFisica, memorias); //solo hace una referencia
             total_referencias--;
             TimeUnit.SECONDS.sleep(1);
-            cont++;
+            contReferencias++;
         }  
         j = 0;
-        cont = 0;
+        contReferencias = 0;
         //calcula el total de invocaciones restantes
-        for(j = 0; j < proceso[indice_proceso].orden.length(); j++){
-            if(proceso[indice_proceso].orden.charAt(j) == ','){
-                cont++;
+        for(j = 0; j < proceso[indiceProcesoDespachar].orden.length(); j++){
+            if(proceso[indiceProcesoDespachar].orden.charAt(j) == ','){
+                contReferencias++;
             }
         }
-        total_referencias = cont;
+        total_referencias = contReferencias;
         if(total_referencias == 0){//si ya no hay mas referencias y/o invocaciones pendientes en el proceso 
-            //printf("\n Se eliminara el %s (Invocaciones terminadas)\n", registro[indice_proceso].nombre);
             // Se elimina el proceso que marque el indice y se acomoda el registro
-            for(int i = 0; i < contador; i++){//se elimina de las estructuras ordenadas
+            for(int i = 0; i < contPaquetesAct[0]; i++){//se elimina de las estructuras ordenadas
                 listaProcesosDespachar[i] = listaProcesosDespachar[i+1];
                 registroTablaPaginas[i] = registroTablaPaginas[i+1];
                 if(i == (TOTAL_P-1)){
@@ -413,7 +405,7 @@ public class Ejecutar extends Thread{
                     registroTablaPaginas[i] = 0;
                 }
             }
-            for(int i = indice_proceso; i < contador; i++){//se elimina de la estructura registro
+            for(int i = indiceProcesoDespachar; i < contPaquetesAct[0]; i++){//se elimina de la estructura registro
                 proceso[i].nombre = proceso[i+1].nombre;
                 proceso[i].totalPaginas = proceso[i+1].totalPaginas;
                 proceso[i].orden = proceso[i+1].orden;
@@ -424,15 +416,15 @@ public class Ejecutar extends Thread{
                 }
             }
         }
-            return total_referencias;
+        return total_referencias;
     }
     //despacha al proceso dentro de la opcion 2 del menu
-    int despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar) throws InterruptedException{
-        int indiceProcesoDespachar = 0;
-        int contReferencias = 0, aux = 0, pos = 0, aux2=0, totalReferenciasFinal = 3;
-        int[] total_ref = new int[TOTAL_PAG];
+    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar) throws InterruptedException{
+        int indiceProcesoDespachar = 0,  pos = 0; //indices
+        int contReferencias = 0, totalReferenciasFinal = 3; //contadores
+        int aux = 0, aux2=0; //auxiliares
+        int[] refTotales = new int[TOTAL_PAG];
         String aux_arg = "";
-        Procesos aux_proc;
             //se busca el indice del registro para contar la invocaciones
             for(int i = 0; i < contProcesosAct[0]; i++){
                     for(int j = 0; j < contProcesosAct[0]; j++){
@@ -443,7 +435,7 @@ public class Ejecutar extends Thread{
                                         contReferencias++;
                                     }
                                 }
-                                total_ref[i] = contReferencias;
+                                refTotales[i] = contReferencias;
                                 contReferencias = 0;
                             }
                         break;
@@ -460,17 +452,17 @@ public class Ejecutar extends Thread{
         // Ordena de manera ascendente la lista de procesos a despachar, registro de tabla de paginas
         for(int i = 0; i < contProcesosAct[0]; i++){
             pos = i;
-            aux = total_ref[i];
+            aux = refTotales[i];
             aux_arg = listaProcesosDespachar[i];
             aux2 = registroTablaPaginas[i];
 
-            while((pos > 0) && (total_ref[pos-1] > aux)){
-                total_ref[pos] = total_ref[pos-1];
+            while((pos > 0) && (refTotales[pos-1] > aux)){
+                refTotales[pos] = refTotales[pos-1];
                 listaProcesosDespachar[pos] = listaProcesosDespachar[pos-1];
                 registroTablaPaginas[pos] = registroTablaPaginas[pos-1];
                 pos--;
             }
-            total_ref[pos] = aux;
+            refTotales[pos] = aux;
             listaProcesosDespachar[pos] = aux_arg;
             registroTablaPaginas[pos] = aux2;
         }
@@ -481,51 +473,14 @@ public class Ejecutar extends Thread{
                 break;
             }
         }
-        totalReferenciasFinal = quantum(contProcesosAct[0], indiceProcesoDespachar, memFisica, memorias); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
+        totalReferenciasFinal = quantum(contProcesosAct, indiceProcesoDespachar, memFisica, memorias); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
         if(totalReferenciasFinal == 0){//si el proceso ha sido eliminado, se decrementa el contador que lleva el control del total de proceso existentes
             contProcesosAct[0]--;
         }
-    }
-    public int[] getContProcesosAct() {
         return contProcesosAct;
     }
-    public String[] getListaProcesosDespachar() {
-        return listaProcesosDespachar;
-    }
 }
-class Memorias{ /*Entradas de usuario*/
-    int tamPag;  //especifica el tamaño de la pagina en bytes
-    int tamMemVir; //especifica el tamaño de la Memoria Virtual en bytes
-    int tamMemFis; //especifica el tamaño de la Memoria Fisica en bytes
-    public Memorias(int tamPag, int tamMemVir, int tamMemFis){
-        this.tamPag = tamPag;
-        this.tamMemVir = tamMemVir;
-        this.tamMemFis = tamMemFis;
-    }
-}
-class Procesos{ /*Entradas de usuario*/
-    String nombre;  //nombre proceso
-    int totalPaginas;  //total de paginas que tendra el proceso (diferente al total de invocaciones)
-    String orden;    // orden de las invocaciones 
-    int n_inv;		//numero de invocaciones (solo usada en una funcion)
-    public Procesos(String nombre, int totalPaginas, String orden, int n_inv){
-        this.nombre = nombre;
-        this.totalPaginas = totalPaginas;
-        this.orden = orden;
-        this.n_inv = n_inv;
-    }
-}
-class Registro{ /*Entradas de la tabla de paginas*/
-    int referida;     // bit
-    int modificada;   // bit
-    int proteccion;   // bit
-    int presen_ausen; // bit
-    int num_marco;    // marco donde se encuentra la pagina
-    public Registro(int referida, int modificada, int proteccion, int presen_ausen, int num_marco){
-        this.referida = referida;
-        this.modificada = modificada;
-        this.proteccion = proteccion;
-        this.presen_ausen = presen_ausen;
-        this.num_marco = num_marco;
-    }
-}
+
+
+
+

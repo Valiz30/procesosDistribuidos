@@ -1,6 +1,3 @@
-/**
- * Paquete
- */
 public class Paquete {
     int identificador;
     Procesos proceso;
