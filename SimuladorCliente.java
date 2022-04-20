@@ -37,6 +37,12 @@ public class SimuladorCliente{
             interfaz.setEjProceso(ejProceso);
             ejProceso.start();
             
+            ProcesoNuevo procesoNuevo = new ProcesoNuevo(datos);
+            procesoNuevo.start();
+
+            ListaProcesos listaProcesos = new ListaProcesos(datos);
+            listaProcesos.start();
+
             idCliente = sInterfaz.registrar(nombre);
             sInterfaz.actualizar(carga);
             sInterfaz.actualizaProceso(carga);

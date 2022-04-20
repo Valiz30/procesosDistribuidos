@@ -1,10 +1,11 @@
 class Datos{
-    int[] contProcesosAct = {}, contRefTotales = {}; //contadores
+    int[] contProcesosAct = {}, contRefTotales = {}, contProcesosCliente = {}; //contadores
     int[] registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
     String[] listaProcesosDespachar;
     Registro[] tablaPaginas;
     boolean procesosPendientes = false;
     Procesos[] listaProcesos = new Procesos[30];
+    String[] procesosCliente = new String[30];
     int carga;
     boolean[] procesosFinalizados = new Proceso[30];
     public Datos(int[] contProcesosAct, int[] registroTablaPaginas, String[] listaProcesosDespachar, Registro[] tablaPaginas){
@@ -13,10 +14,17 @@ class Datos{
         this.listaProcesosDespachar = listaProcesosDespachar;
         this.tablaPaginas = tablaPaginas;
         contRefTotales[0] = 0;
+        contProcesosCliente[0] = 0;
         carga = 0;
     }
     //metodos
+    public synchronized int[] getContProcesosCliente() {
+        return contProcesosCliente;
+    }
 
+    public synchronized String[] getProcesosCliente() {
+        return procesosCliente;
+    }
     public synchronized boolean[] getprocesosFinalizados(){
         return this.procesosFinalizados;
     }
@@ -49,6 +57,13 @@ class Datos{
         return this.tablaPaginas;
     }
 
+    public synchronized void setContProcesosCliente(int[] contProcesosCliente) {
+        this.contProcesosCliente = contProcesosCliente;
+    }
+
+    public synchronized void setProcesosCliente(String[] procesosCliente) {
+        this.procesosCliente = procesosCliente;
+    }
     public synchronized void setprocesosFinalizados(boolean[] procesosFinalizados){//pendiente pasar la bandera
         this.procesosFinalizados = procesosFinalizados;
     }

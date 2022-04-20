@@ -3,7 +3,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SimuladorPrompt extends Thread {
-    int[] contProcesosAct, contadorTabla;
+    int[] contProcesosAct, contadorTabla, contProcesosCliente;
     String[] listaProcesosDespachar;
     Registro[] tablaPaginas;
     int[] registroTablaPaginas;
@@ -12,6 +12,7 @@ public class SimuladorPrompt extends Thread {
     Paquete paquete;
     Procesos procesoNuevo; //proceso que reciba el cliente
     Procesos[] listaProcesos;
+    String[] procesosCliente = new String[30];
     public SimuladorPrompt(Datos datos, Paquete paquete){
         this.datos = datos;
         this.paquete = paquete;
@@ -22,8 +23,10 @@ public class SimuladorPrompt extends Thread {
             listaProcesosDespachar = datos.getListaProcesosDespachar();
             registroTablaPaginas = datos.getRegistroTablaPaginas();
             listaProcesos = datos.getListaProcesos();
+            contProcesosCliente = datos.getContProcesosCliente();
+            procesosCliente = datos.getProcesosCliente();
             try {
-                paquete.proceso = prompt(contProcesosAct,listaProcesosDespachar, registroTablaPaginas, listaProcesos);//añadir nuevo proceso
+                paquete.proceso = prompt(contProcesosAct,listaProcesosDespachar, registroTablaPaginas, listaProcesos, contProcesosCliente, procesosCliente);//añadir nuevo proceso
             } catch (InterruptedException ex) {
                 Logger.getLogger(SimuladorPrompt.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -99,7 +102,7 @@ public class SimuladorPrompt extends Thread {
         contadorTabla[0] = contadorTabla[0] + procesoNuevo.totalPaginas;
         return contadorTabla[0];
     }
-    Procesos prompt(int[] contadorProcesoAct, String[] listaProcesosDespachar, int[] registroTablaPaginas, Procesos[] listaProcesos) throws InterruptedException{
+    Procesos prompt(int[] contadorProcesoAct, String[] listaProcesosDespachar, int[] registroTablaPaginas, Procesos[] listaProcesos, int[] contProcesosCliente, String[] procesosCliente) throws InterruptedException{
         int contRefTotales = 0;
         String comando = "";
         Scanner entrada = new Scanner(System.in);
@@ -111,6 +114,7 @@ public class SimuladorPrompt extends Thread {
         for(int i = 0; i < contadorProcesoAct[0]; i++){
             contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
         }
+        procesosCliente[contProcesosCliente[0]] = procesoNuevo.nombre;
         contadorProcesoAct[0]++;
         datos.setContRefTotales(contRefTotales);
         datos.setContProcesosAct(contProcesosAct);
