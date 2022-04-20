@@ -5,13 +5,15 @@ import java.util.concurrent.TimeUnit;
 public class Ejecutar extends Thread{
     int TOTAL_P = 30, TOTAL_PAG = 50, AUX = 50;
     int[] contProcesosAct = {}; //contadores
+    int contRefTotales = 0;
     int[] registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
-    Procesos[] proceso = new Procesos[30];
+    Procesos[] listaProcesos;
     Memorias memorias;
     Registro[] tablaPaginas = new Registro[50];
     int[] memFisica = new int[memorias.tamMemFis]; //variable de la memoria fisica
     String[] listaProcesosDespachar;
     Datos datos;
+    boolean[] procesosFinalizados;
     public Ejecutar(Memorias memorias, Datos datos){
         for (int i = 0; i < memorias.tamMemFis; i++)
             memFisica[i] = 0;
@@ -24,9 +26,15 @@ public class Ejecutar extends Thread{
             if(datos.getProcesosPendientes() == true){
                 contProcesosAct = datos.getContProcesosAct();
                 listaProcesosDespachar = datos.getListaProcesosDespachar();
+                listaProcesos = datos.getListaProcesos();
+                procesosFinalizados = datos.getProcesosFinalizados();
                 if(contProcesosAct[0] != 0){
                     try{
-                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar));
+                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos));
+                        for(int i = 0; i < contadorProcesoAct[0]; i++){
+                            contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
+                        }
+                        datos.setContRefTotales(contRefTotales);
                     }catch(InterruptedException e){
                         throw new RuntimeException(e);
                     };
@@ -213,7 +221,7 @@ public class Ejecutar extends Thread{
 
             // Buscar el nombre del proceso a despachar
             String nombre = "";
-            nombre = proceso[indiceProcesoDespachar].nombre;
+            nombre = listaProcesos[indiceProcesoDespachar].nombre;
             int i = 0, indice = 0;
             for (i = 0; i < 3; i++){
                     if (listaProcesosDespachar[i] == nombre){
@@ -234,14 +242,14 @@ public class Ejecutar extends Thread{
             int desplazamientoInt = 0;
 
             char[] registroOrdenRemplazo = new char[100];
-            registroOrdenRemplazo = proceso[indiceProcesoDespachar].orden.toCharArray();
+            registroOrdenRemplazo = listaProcesos[indiceProcesoDespachar].orden.toCharArray();
             /* Encontrar el primer Orden desplazamiento*/
             int indiceFinal = 0;
             for(int k = 0; k < registroOrdenRemplazo.length; k++){
                 if(registroOrdenRemplazo[k] == ',');
                     indiceFinal = k;
             }
-            char[] ordenDesplazamiento = proceso[indiceProcesoDespachar].orden.substring(0, indiceFinal).toCharArray();//almacena la primera invocacion
+            char[] ordenDesplazamiento = listaProcesos[indiceProcesoDespachar].orden.substring(0, indiceFinal).toCharArray();//almacena la primera invocacion
             /*Longitud del arreglo encontrado ordenDesplazamiento*/
             int longOrdenDes = 1; /* El tamaño toma en cuenta la coma, incrementando a 1 */
             i = 0;
@@ -363,16 +371,17 @@ public class Ejecutar extends Thread{
 
             /*Eliminar la invocacion de la variable registro[indiceProceso] */
             /* El 0 se cambia por indiceProceso*/
-            String vacio = proceso[indiceProcesoDespachar].orden.substring(indiceFinal);
-            proceso[indiceProcesoDespachar].orden = vacio;
+            String vacio = listaProcesos[indiceProcesoDespachar].orden.substring(indiceFinal);
+            listaProcesos[indiceProcesoDespachar].orden = vacio;
             /**************************/
     }
     //hace la simulacion del quantum -> 3 segundo -> 1 segundo = 1 referencia
     int quantum(int[] contPaquetesAct, int indiceProcesoDespachar, int memFisica[], Memorias memorias) throws InterruptedException{
         int contReferencias = 0, j = 0, total_referencias = 0;
+        boolean procesoFinalizado = false; 
         //calcula el total de invocaciones restantes
-        for(j = 0; j < proceso[indiceProcesoDespachar].orden.length(); j++){
-            if(proceso[indiceProcesoDespachar].orden.charAt(j) == ','){
+        for(j = 0; j < listaProcesos[indiceProcesoDespachar].orden.length(); j++){
+            if(listaProcesos[indiceProcesoDespachar].orden.charAt(j) == ','){
                 contReferencias++;
             }
         }
@@ -388,8 +397,8 @@ public class Ejecutar extends Thread{
         j = 0;
         contReferencias = 0;
         //calcula el total de invocaciones restantes
-        for(j = 0; j < proceso[indiceProcesoDespachar].orden.length(); j++){
-            if(proceso[indiceProcesoDespachar].orden.charAt(j) == ','){
+        for(j = 0; j < listaProcesos[indiceProcesoDespachar].orden.length(); j++){
+            if(listaProcesos[indiceProcesoDespachar].orden.charAt(j) == ','){
                 contReferencias++;
             }
         }
@@ -406,20 +415,25 @@ public class Ejecutar extends Thread{
                 }
             }
             for(int i = indiceProcesoDespachar; i < contPaquetesAct[0]; i++){//se elimina de la estructura registro
-                proceso[i].nombre = proceso[i+1].nombre;
-                proceso[i].totalPaginas = proceso[i+1].totalPaginas;
-                proceso[i].orden = proceso[i+1].orden;
+                listaProcesos[i].nombre = listaProcesos[i+1].nombre;
+                listaProcesos[i].totalPaginas = listaProcesos[i+1].totalPaginas;
+                listaProcesos[i].orden = listaProcesos[i+1].orden;
                 if(i == (TOTAL_P-1)){
-                    proceso[i].nombre = "";
-                    proceso[i].totalPaginas = 0;
-                    proceso[i].orden = "";
+                    listaProcesos[i].nombre = "";
+                    listaProcesos[i].totalPaginas = 0;
+                    listaProcesos[i].orden = "";
                 }
             }
+            procesoFinalizado = true;
         }
+        
+        datos.
+        datos.setListaProcesos(listaProcesos);
+        datos.setListaProcesosDespachar(ListaProcesosDespachar);
         return total_referencias;
     }
     //despacha al proceso dentro de la opcion 2 del menu
-    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar) throws InterruptedException{
+    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar, Procesos[] listaProcesos) throws InterruptedException{
         int indiceProcesoDespachar = 0,  pos = 0; //indices
         int contReferencias = 0, totalReferenciasFinal = 3; //contadores
         int aux = 0, aux2=0; //auxiliares
@@ -428,10 +442,10 @@ public class Ejecutar extends Thread{
             //se busca el indice del registro para contar la invocaciones
             for(int i = 0; i < contProcesosAct[0]; i++){
                     for(int j = 0; j < contProcesosAct[0]; j++){
-                            if(listaProcesosDespachar[i] == proceso[j].nombre){ 
+                            if(listaProcesosDespachar[i] == listaProcesos[j].nombre){ 
                                     // Cuenta el numero de referencias de cada proceso
-                                for(int l = 0; l < proceso[j].orden.length(); l++){
-                                    if(proceso[j].orden.charAt(l) == ','){
+                                for(int l = 0; l < listaProcesos[j].orden.length(); l++){
+                                    if(listaProcesos[j].orden.charAt(l) == ','){
                                         contReferencias++;
                                     }
                                 }
@@ -468,7 +482,7 @@ public class Ejecutar extends Thread{
         }
         // Se busca el indice del proceso a despachar en el registro de procesos
         for(int i = 0; i < contProcesosAct[0]; i++){
-            if(listaProcesosDespachar[0] == proceso[i].nombre){ 
+            if(listaProcesosDespachar[0] == listaProcesos[i].nombre){ 
                 indiceProcesoDespachar = i;
                 break;
             }

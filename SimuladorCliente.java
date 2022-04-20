@@ -12,7 +12,7 @@ public class SimuladorCliente{
         }
         try {
             Paquete paquete;
-            Datos datos = new Datos(contProcesosAct, registroTablaPaginas, listaProcesosDespachar, tablaPagina);
+            Registro[] tablaPaginas = new Registro[100];
             Procesos[] procesosPendientes = new Procesos[30];
             int TOTAL_PROCESOS = 30;
             String[] listaProcesosDespachar = new String[TOTAL_PROCESOS]; //arreglo que contiene el orden de los procesos a despachar
@@ -20,6 +20,7 @@ public class SimuladorCliente{
             int idCliente = 0; //identificadores
             int[] contProcesosAct = {0}, contadorTabla = {0}; //contadores
             int[] registroTablaPaginas = new int[TOTAL_PROCESOS];
+            Datos datos = new Datos(contProcesosAct, registroTablaPaginas, listaProcesosDespachar, tablaPaginas);
             String nombre = "//" + argv[0] + "/SimuladorServidor";
             SimuladorInterfaz sInterfaz = (SimuladorInterfaz) Naming.lookup(nombre);
             sInterfaz.registrar(nombre);
