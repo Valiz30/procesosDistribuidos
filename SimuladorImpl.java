@@ -27,8 +27,8 @@ public class SimuladorImpl extends UnicastRemoteObject
       Paquete paqueteEnviar;
       return paqueteEnviar;
    }
-   public boolean[] actualizarProceso(int[] idProcesos){//verificar si los proceso pendientes del cliente han terminado de ejecutarse
-      boolean[] verProceso = new boolean[idProcesos.length];//arreglo que indica si el proceso ya se ejecuto, respetando los indices en el arreglo idProcesos
+   public boolean[] actualizarProceso(String[] nombreProcesos){//verificar si los proceso pendientes del cliente han terminado de ejecutarse
+      boolean[] verProceso = new boolean[nombreProcesos.length];//arreglo que indica si el proceso ya se ejecuto, respetando los indices en el arreglo idProcesos
 
       return verProceso;
    }
