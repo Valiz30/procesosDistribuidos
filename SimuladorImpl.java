@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 //hola amigos como estan! si verdad!
 public class SimuladorImpl extends UnicastRemoteObject
    implements SimuladorInterfaz {
-      final int TOTAL_CLIENTES = 5, TOTAL_PAQUETES = 30, TOTAL_PROCESOS = 30; //variables constantes
+      final int TOTAL_CLIENTES = 5, TOTAL_PAQUETES = 30, TOTAL_PROCESOS = 30, UMBRAL = 10; //variables constantes
       int contClientAct = 0, contPaquetesAct = 0; //contadores
       int[] clientes = new int[TOTAL_CLIENTES], procesosRegistrados; //registro de clientes en ejecucion, 
       Paquete[] paquetesPendientes = new Paquete[TOTAL_PAQUETES];// registro de paquetes/procesos que esperan a ser ejecutados
