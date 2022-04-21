@@ -3,7 +3,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SimuladorPrompt extends Thread {
-    int[] contProcesosAct, contadorTabla, contProcesosCliente;
+    int[] contProcesosAct, contProcesosCliente;
     String[] listaProcesosDespachar;
     Registro[] tablaPaginas;
     int[] registroTablaPaginas;
@@ -11,22 +11,18 @@ public class SimuladorPrompt extends Thread {
     Datos datos;
     Paquete paquete;
     Procesos procesoNuevo; //proceso que reciba el cliente
-    Procesos[] listaProcesos;
-    String[] procesosCliente = new String[30];
+    Procesos[] listaProcesos; //lista de procesos desordenada
+    String[] procesosCliente = new String[30]; //lista que solo le pertenece a los clientes
     public SimuladorPrompt(Datos datos, Paquete paquete){
         this.datos = datos;
         this.paquete = paquete;
     }
     public void run(){
         while(true){
-            contProcesosAct = datos.getContProcesosAct();
-            listaProcesosDespachar = datos.getListaProcesosDespachar();
-            registroTablaPaginas = datos.getRegistroTablaPaginas();
-            listaProcesos = datos.getListaProcesos();
             contProcesosCliente = datos.getContProcesosCliente();
             procesosCliente = datos.getProcesosCliente();
             try {
-                paquete.proceso = prompt(contProcesosAct,listaProcesosDespachar, registroTablaPaginas, listaProcesos, contProcesosCliente, procesosCliente);//añadir nuevo proceso
+                paquete.proceso = prompt(contProcesosCliente, procesosCliente);//añadir nuevo proceso
             } catch (InterruptedException ex) {
                 Logger.getLogger(SimuladorPrompt.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -79,7 +75,6 @@ public class SimuladorPrompt extends Thread {
         }
         procesoNuevo.totalPaginas = cadenaToEntero(comando.substring(indicePrimerEspacio + 1, indiceSegundoEspacio).toCharArray());
         procesoNuevo.orden = comando.substring(indiceSegundoEspacio + 1, comando.length());
-	    listaProcesosDespachar[contProcesosAct[0]] = procesoNuevo.nombre ;//anade el nuevo proceso a la lista de proceso a despachar
         for(int l = 0; l < procesoNuevo.orden.length(); l++){
             if(procesoNuevo.orden.charAt(l) == ','){
                 contReferencias++;
@@ -88,37 +83,16 @@ public class SimuladorPrompt extends Thread {
         procesoNuevo.n_inv = contReferencias;
 	    return procesoNuevo;
     }
-    //Anade las paginas del proceso nuevo a la tabla de paginas
-    int anadirProcesoTablaPaginas(int[] contProcesosAct, int[] contadorTabla, Procesos procesoNuevo, int[] registroTablaPaginas){
-        int i;
-        registroTablaPaginas[contProcesosAct[0]] = contadorTabla[0];
-        for(i = contadorTabla[0]; i <= contadorTabla[0] + procesoNuevo.totalPaginas; i++){ 
-            tablaPaginas[i].referida = 0;
-            tablaPaginas[i].modificada = 0;
-            tablaPaginas[i].proteccion = 0;
-            tablaPaginas[i].presen_ausen = 0;
-            tablaPaginas[i].num_marco = 0;
-        }
-        contadorTabla[0] = contadorTabla[0] + procesoNuevo.totalPaginas;
-        return contadorTabla[0];
-    }
-    Procesos prompt(int[] contadorProcesoAct, String[] listaProcesosDespachar, int[] registroTablaPaginas, Procesos[] listaProcesos, int[] contProcesosCliente, String[] procesosCliente) throws InterruptedException{
+    Procesos prompt(int[] contProcesosCliente, String[] procesosCliente) throws InterruptedException{
         int contRefTotales = 0;
         String comando = "";
         Scanner entrada = new Scanner(System.in);
         System.out.println("> ");
         comando = entrada.nextLine();
-        procesoNuevo = registrarDatos(comando, listaProcesosDespachar, contProcesosAct);//pide datos de proceso
-        contadorTabla[0] = anadirProcesoTablaPaginas(contProcesosAct, contadorTabla, procesoNuevo, registroTablaPaginas);//se añaden las paginas a la tabla de paginas            contProcesosAct[0]++;
-        listaProcesos[contadorProcesoAct[0]] = procesoNuevo;
-        for(int i = 0; i < contadorProcesoAct[0]; i++){
-            contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
-        }
+        procesoNuevo = registrarDatos(comando);//pide datos de proceso
         procesosCliente[contProcesosCliente[0]] = procesoNuevo.nombre;
-        contadorProcesoAct[0]++;
-        datos.setContRefTotales(contRefTotales);
-        datos.setContProcesosAct(contProcesosAct);
-        datos.setListaProcesos(listaProcesos);
+        contProcesosCliente[0]++;
+        datos.setContProcesosCliente(contProcesosCliente);
         return procesoNuevo;  
     }
 }

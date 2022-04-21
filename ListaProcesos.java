@@ -1,9 +1,13 @@
 public class ListaProcesos extends Thread{
+    int TOTAL_PROCESOS = 30;
     boolean[] estadoProcesos;
     String[] procesosCliente;
+    int[] contProcesosCliente;
     Datos datos;
-    public ListaProcesos(Datos datos){
+    SimuladorInterfaz sInterfaz;
+    public ListaProcesos(Datos datos, SimuladorInterfaz sInterfaz){
         this.datos = datos;
+        this.sInterfaz = sInterfaz;
     }
     public void run(){
         while(){
@@ -14,27 +18,19 @@ public class ListaProcesos extends Thread{
                     if(estadoProcesos[i] == true){
                         System.out.println(x + "|El proceso"+procesosClientes[i]+ "ha terminado de ejecutarse") ;
                         // Se elimina el proceso que marque el indice y se acomoda el registro
-                        for(int i = 0; i < contPaquetesAct[0]; i++){//se elimina de las estructuras ordenadas
-                            listaProcesosDespachar[i] = listaProcesosDespachar[i+1];
-                            registroTablaPaginas[i] = registroTablaPaginas[i+1];
-                            if(i == (TOTAL_P-1)){
-                                for(j = 0; j < listaProcesosDespachar[i].length(); j++)
-                                    listaProcesosDespachar[i] = "";
-                                registroTablaPaginas[i] = 0;
+                        contProcesosCliente = datos.getContProcesosCliente();
+                        for(int j = i; j < contProcesosCliente[0]; j++){//se elimina del registro de procesos del cliente.
+                            procesosCliente[j].nombre = procesosCliente[j+1].nombre;
+                            if(i == (TOTAL_PROCESOS - 1)){
+                                procesosCliente[j].nombre = "";
                             }
                         }
-                        for(int i = indiceProcesoDespachar; i < contPaquetesAct[0]; i++){//se elimina de la estructura registro
-                            listaProcesos[i].nombre = listaProcesos[i+1].nombre;
-                            listaProcesos[i].totalPaginas = listaProcesos[i+1].totalPaginas;
-                            listaProcesos[i].orden = listaProcesos[i+1].orden;
-                            if(i == (TOTAL_P-1)){
-                                listaProcesos[i].nombre = "";
-                                listaProcesos[i].totalPaginas = 0;
-                                listaProcesos[i].orden = "";
-                            }
-                        }
+                        contProcesosCliente[0]--;
+                        break;
                     }
                 }
+                datos.setProcesosCliente(procesosCliente);
+                datos.setContProcesosCliente(contProcesosCliente);
             }catch(Exception e) {
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();

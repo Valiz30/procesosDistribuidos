@@ -1,5 +1,5 @@
 class Datos{
-    int[] contProcesosAct = {}, contRefTotales = {}, contProcesosCliente = {}; //contadores
+    int[] contProcesosAct = {}, contRefTotales = {}, contProcesosCliente = {}, contProcesosFinalizados = {}; //contadores
     int[] registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
     String[] listaProcesosDespachar;
     Registro[] tablaPaginas;
@@ -7,7 +7,7 @@ class Datos{
     Procesos[] listaProcesos = new Procesos[30];
     String[] procesosCliente = new String[30];
     int carga;
-    boolean[] procesosFinalizados = new Proceso[30];
+    String[] procesosFinalizados = new Proceso[30];
     public Datos(int[] contProcesosAct, int[] registroTablaPaginas, String[] listaProcesosDespachar, Registro[] tablaPaginas){
         this.contProcesosAct = contProcesosAct;
         this.registroTablaPaginas = registroTablaPaginas;
@@ -15,32 +15,31 @@ class Datos{
         this.tablaPaginas = tablaPaginas;
         contRefTotales[0] = 0;
         contProcesosCliente[0] = 0;
+        contProcesosFinalizados[0] = 0;
         carga = 0;
     }
     //metodos
+    public synchronized int[] getContProcesosFinalizados() {
+        return contProcesosFinalizados;
+    }
     public synchronized int[] getContProcesosCliente() {
         return contProcesosCliente;
     }
-
-    public synchronized String[] getProcesosCliente() {
+    public synchronized String[] getProcesosCliente(int ) {
         return procesosCliente;
     }
-    public synchronized boolean[] getprocesosFinalizados(){
+    public synchronized String[] getprocesosFinalizados(){
         return this.procesosFinalizados;
     }
-
     public synchronized int getCarga(){
         return this.Carga;
     }
-
     public synchronized Procesos[] getListaProcesos(){
         return this.listaProcesos;
     }
-
     public synchronized int[] getContRefTotales(){
         return this.contRefTotales;
     }
-
     public synchronized boolean getProcesosPendientes(){
         return this.procesosPendientes;
     }
@@ -56,30 +55,27 @@ class Datos{
     public synchronized Registro[] getTablaPaginas(){
         return this.tablaPaginas;
     }
-
+    public synchronized void setContProcesosFinalizados(int[] contProcesosFinalizados) {
+        this.contProcesosFinalizados = contProcesosFinalizados;
+    }
     public synchronized void setContProcesosCliente(int[] contProcesosCliente) {
         this.contProcesosCliente = contProcesosCliente;
     }
-
     public synchronized void setProcesosCliente(String[] procesosCliente) {
         this.procesosCliente = procesosCliente;
     }
-    public synchronized void setprocesosFinalizados(boolean[] procesosFinalizados){//pendiente pasar la bandera
+    public synchronized void setprocesosFinalizados(String[] procesosFinalizados){//pendiente pasar la bandera
         this.procesosFinalizados = procesosFinalizados;
     }
-
     public synchronized void setCarga(Int Carga){
         this.Carga = Carga;
     }
-
     public synchronized void setListaProcesos(Procesos[] listaProcesos){
         this.listaProcesos = listaProcesos;
     }
-
     public synchronized void setContRefTotales(int[] contRefTotales){
         this.contRefTotales = contRefTotales;
     }
-
     public synchronized void setProcesosPendientes(boolean ProcesosPendientes){
         this.procesosPendientes = ProcesosPendientes;
     }

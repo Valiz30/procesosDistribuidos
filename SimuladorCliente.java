@@ -23,7 +23,7 @@ public class SimuladorCliente{
             Datos datos = new Datos(contProcesosAct, registroTablaPaginas, listaProcesosDespachar, tablaPaginas);
             String nombre = "//" + argv[0] + "/SimuladorServidor";
             SimuladorInterfaz sInterfaz = (SimuladorInterfaz) Naming.lookup(nombre);
-            sInterfaz.registrar(nombre);
+            idCliente = sInterfaz.registrar(nombre);
             SimuladorPrompt interfaz = new SimuladorPrompt(
                 contProcesosAct,
                 contadorTabla,
@@ -37,15 +37,16 @@ public class SimuladorCliente{
             interfaz.setEjProceso(ejProceso);
             ejProceso.start();
             
-            ProcesoNuevo procesoNuevo = new ProcesoNuevo(datos);
+            ProcesoNuevo procesoNuevo = new ProcesoNuevo(datos, sInterfaz);
             procesoNuevo.start();
 
-            ListaProcesos listaProcesos = new ListaProcesos(datos);
+            ListaProcesos listaProcesos = new ListaProcesos(datos, sInterfaz);
             listaProcesos.start();
 
-            idCliente = sInterfaz.registrar(nombre);
             sInterfaz.actualizar(carga);
             sInterfaz.actualizaProceso(carga);
+
+            sInterfaz.eliminarCliente(nombre);
 
         }catch(Exception e) {
             System.err.println("Servidor excepcion: "+ e.getMessage());

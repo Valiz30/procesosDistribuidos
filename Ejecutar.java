@@ -13,7 +13,7 @@ public class Ejecutar extends Thread{
     int[] memFisica = new int[memorias.tamMemFis]; //variable de la memoria fisica
     String[] listaProcesosDespachar;
     Datos datos;
-    boolean[] procesosFinalizados;
+    String[] procesosFinalizados;
     public Ejecutar(Memorias memorias, Datos datos){
         for (int i = 0; i < memorias.tamMemFis; i++)
             memFisica[i] = 0;
@@ -30,7 +30,7 @@ public class Ejecutar extends Thread{
                 procesosFinalizados = datos.getProcesosFinalizados();
                 if(contProcesosAct[0] != 0){
                     try{
-                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos));
+                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos, procesosFinalizados));
                         for(int i = 0; i < contadorProcesoAct[0]; i++){
                             contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
                         }
@@ -201,7 +201,7 @@ public class Ejecutar extends Thread{
             return bits;
     }
     //hace la siguiente referencia del proceso en cuestion
-    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias){
+    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias, String[] procesosFinalizados){
             int indicePagMar = 0, desplazamiento = 0, bitsPagMar = 0, bitsDesplazamiento = 0; 
             int[] dirBin = new int[30], dirDec = {};
             char[] dirHex = new char[30];
@@ -404,6 +404,7 @@ public class Ejecutar extends Thread{
         }
         total_referencias = contReferencias;
         if(total_referencias == 0){//si ya no hay mas referencias y/o invocaciones pendientes en el proceso 
+            procesosFinalizados[datos.getContProcesosFinalizados()[0]] = listaProcesosDespachar[0];
             // Se elimina el proceso que marque el indice y se acomoda el registro
             for(int i = 0; i < contPaquetesAct[0]; i++){//se elimina de las estructuras ordenadas
                 listaProcesosDespachar[i] = listaProcesosDespachar[i+1];
@@ -427,13 +428,12 @@ public class Ejecutar extends Thread{
             procesoFinalizado = true;
         }
         
-        datos.
         datos.setListaProcesos(listaProcesos);
         datos.setListaProcesosDespachar(ListaProcesosDespachar);
         return total_referencias;
     }
     //despacha al proceso dentro de la opcion 2 del menu
-    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar, Procesos[] listaProcesos) throws InterruptedException{
+    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar, Procesos[] listaProcesos, String[] procesosFinalizados) throws InterruptedException{
         int indiceProcesoDespachar = 0,  pos = 0; //indices
         int contReferencias = 0, totalReferenciasFinal = 3; //contadores
         int aux = 0, aux2=0; //auxiliares
@@ -487,7 +487,7 @@ public class Ejecutar extends Thread{
                 break;
             }
         }
-        totalReferenciasFinal = quantum(contProcesosAct, indiceProcesoDespachar, memFisica, memorias); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
+        totalReferenciasFinal = quantum(contProcesosAct, indiceProcesoDespachar, memFisica, memorias, procesosFinalizados); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
         if(totalReferenciasFinal == 0){//si el proceso ha sido eliminado, se decrementa el contador que lleva el control del total de proceso existentes
             contProcesosAct[0]--;
         }

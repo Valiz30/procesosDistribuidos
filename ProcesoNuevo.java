@@ -1,28 +1,37 @@
 public class ProcesoNuevo extends Thread{//solicita al servidor un nuevo proceso.
     Datos datos;
     Paquete paqueteNuevo;
-    int[] contadorProcesoAct;
-    String[] listaProcesosDespachar;
+    int[] contadorProcesoAct = {}, contProcesosFinalizados = {}, contadorTabla = {};
+    String[] listaProcesosDespachar, procesosFinalizados;
     int[] registroTablaPaginas;
     Procesos[] listaProcesos;
-    public ProcesoNuevo(Datos datos){
+    SimuladorInterfaz sInterfaz;
+    public ProcesoNuevo(Datos datos, SimuladorInterfaz sInterfaz){
         this.datos = datos;
+        this.sInterfaz = sInterfaz;
+        contadorTabla[0] = 0;
     }
     public void run(){
         while(true){
             try{
-                paqueteNuevo = sInterfaz.actualizar(datos.getContRefTotales(),datos.getProcesosFinalizados());
+                paqueteNuevo = sInterfaz.actualizar(datos.getContRefTotales(), datos.getProcesosFinalizados());
                 if(paqueteNuevo.procesoExiste == true){
-                    contProcesosAct = datos.getContProcesosAct();
+                    contProcesosAct = datos.getContProcesosAct();//verificar procesos existentes
                     listaProcesosDespachar = datos.getListaProcesosDespachar();
                     registroTablaPaginas = datos.getRegistroTablaPaginas();
                     listaProcesos = datos.getListaProcesos();
                     try {
-                        registrar(paqueteNuevo,contProcesosAct,listaProcesosDespachar, registroTablaPaginas, ListaProcesos);//añadir nuevo proceso
-                    } catch (InterruptedException ex) {
+                        registrar(paqueteNuevo, contProcesosAct, listaProcesosDespachar, registroTablaPaginas, ListaProcesos);
+                    } catch (InterruptedException ex){
                         Logger.getLogger(SimuladorPrompt.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+                for(int i = 0; i < contProcesosFinalizados[0], i++){
+                    procesosFinalizados[i] = ""; 
+                }
+                contProcesosFinalizados[0] = 0;
+                datos.setContProcesosFinalizados(contProcesosFinalizados);
+                datos.setprocesosFinalizados(procesosFinalizados);
             }catch(Exception e) {
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();
@@ -51,6 +60,7 @@ public class ProcesoNuevo extends Thread{//solicita al servidor un nuevo proceso
         contadorTabla[0] = contadorTabla[0] + procesoNuevo.totalPaginas;
         return contadorTabla[0];
     }
+
     void registrar(Paquete paqueteNuevo, int[] contadorProcesoAct, String[] listaProcesosDespachar, int[] registroTablaPaginas, Procesos[] listaProcesos) throws InterruptedException{
         int contRefTotales = 0;
         procesoNuevo = registrarDatos(paqueteNuevo, listaProcesosDespachar, contProcesosAct);//pide datos de proceso
