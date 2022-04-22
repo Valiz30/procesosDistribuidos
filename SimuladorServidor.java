@@ -1,5 +1,10 @@
 import java.io.*;
 import java.rmi.*;
+/**
+* Docs SimuladorServidor
+* @code Servidor que ejecuta la interfaz remota
+*
+*/
 
 public class SimuladorServidor {
    public static void main(String argv[]) {
@@ -7,11 +12,13 @@ public class SimuladorServidor {
          System.setSecurityManager(new RMISecurityManager());
       }*/
       try {
-         SimuladorInterfaz sInterfaz = new SimuladorImpl();
-         Naming.rebind("//localhost/SimuladorServidor", sInterfaz);
+         SimuladorInterfaz sInterfaz = new SimuladorImpl(); //Define la interfaz remota
+         Naming.rebind("//localhost/SimuladorServidor", sInterfaz); //referencia al objeto remoto
       } catch(Exception e) {
          System.out.println("SimuladorServidor: "+e.getMessage());
          e.printStackTrace();
       }
    }
 }
+
+//TERMINADO

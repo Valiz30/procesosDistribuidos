@@ -37,6 +37,39 @@ public interface SimuladorInterfaz extends Remote { //se crea la interfaz remota
     */
     public void eliminarCliente(String nombre) throws RemoteException;
 }
-
-
+/**
+* Docs Paquete Servidor
+* @code proceso contiene el proceso del paquete
+* procesoExiste Bandera para saber si un proceso existe o no
+*/
+class Paquete {
+    Procesos proceso;
+    boolean procesoExiste;//banderas
+    public Paquete(Procesos proceso, boolean procesoExiste){
+       this.proceso = proceso;
+       this.procesoExiste = procesoExiste;
+    }
+ }
+/**
+* Docs Clase Proceso 
+* @code Contiene las variables que le dan informacion a un Proceso
+* Tambien podemos tomar Procesos como las entradas del usuario
+*
+* nombre nombre proceso
+* totalPaginas  total de paginas que tendra el proceso (diferente al total de invocaciones)
+* orden  orden de las invocaciones 
+* n_inv numero de invocaciones (solo usada en una funcion)
+*/
+class Procesos{ 
+    String nombre;  
+    int totalPaginas; 
+    String orden;     
+    int n_inv;		
+    public Procesos(String nombre, int totalPaginas, String orden, int n_inv){
+       this.nombre = nombre;
+       this.totalPaginas = totalPaginas;
+       this.orden = orden;
+       this.n_inv = n_inv;
+    }
+ }
 //TERMINADO
