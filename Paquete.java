@@ -1,10 +1,16 @@
+/**
+* Docs Paquete 
+* @code Paquete que se envia al servidor
+* proceso Es el proceso que se guarda en el paquete
+* procesoExiste es la bandera que controla, sin existe un proceso en el paquete
+*/
 public class Paquete {
-    int identificador;
     Procesos proceso;
-    boolean procesoExiste;//banderas
-    public Paquete(int identificador, Procesos proceso, boolean procesoExiste){
-        this.identificador = identificador;
+    boolean procesoExiste;
+    public Paquete(Procesos proceso, boolean procesoExiste){
         this.proceso = proceso;
         this.procesoExiste = procesoExiste;
     }
 }
+
+//TERMINADO

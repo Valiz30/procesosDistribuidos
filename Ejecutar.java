@@ -3,24 +3,26 @@ import static java.lang.Math.*;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 public class Ejecutar extends Thread{
-    int TOTAL_P = 30, TOTAL_PAG = 50, AUX = 50;
-    int[] contProcesosAct = {}; //contadores
-    int contRefTotales = 0;
-    int[] registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
     Procesos[] listaProcesos;
     Memorias memorias;
-    Registro[] tablaPaginas = new Registro[50];
+    int TOTAL_P = 30, TOTAL_PAG = 50, AUX = 50,contRefTotales = 0;
+    int[] contProcesosAct = {},registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][]) //contadores
     int[] memFisica = new int[memorias.tamMemFis]; //variable de la memoria fisica
-    String[] listaProcesosDespachar;
+    Registro[] tablaPaginas = new Registro[50]; 
+    String[] listaProcesosDespachar,procesosFinalizados;
     Datos datos;
-    String[] procesosFinalizados;
+
     public Ejecutar(Memorias memorias, Datos datos){
         for (int i = 0; i < memorias.tamMemFis; i++)
             memFisica[i] = 0;
         this.memorias = memorias;
         this.datos = datos;
     }
-    //Anade las paginas del proceso nuevo a la tabla de paginas
+
+    /**
+    * run
+    * @code actuando como hilo.  Anade las paginas del proceso nuevo a la tabla de paginas
+    */
     public void run(){
         while(true){
             if(datos.getProcesosPendientes() == true){
@@ -31,7 +33,7 @@ public class Ejecutar extends Thread{
                 if(contProcesosAct[0] != 0){
                     try{
                         datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos, procesosFinalizados));
-                        for(int i = 0; i < contadorProcesoAct[0]; i++){
+                        for(int i = 0; i < contProcesosAct[0]; i++){
                             contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
                         }
                         datos.setContRefTotales(contRefTotales);
@@ -45,22 +47,33 @@ public class Ejecutar extends Thread{
             }
         }
     }
-    //funcion para traducir de decimal a binario
+    /**
+    *   decimalBinario()
+    *   @code funcion para traducir de decimal a binario
+    *   @param decimal valor de entrada en decimal
+    *   @param binario[] se guarda el valor binario
+    *   @param totalBits contador que se usa para los bits totales
+    */
     public void decimalBinario(int decimal, int binario[], int totalBits){ 
-    float residuo;
-    int cont = totalBits-1;
-    for(int k = 0; k < totalBits; k++){//inicializa en 0's el arreglo donde se almacenara el numero en binario
-	    binario[k] = 0;
-    }                                        
-    for(int i = 0; i < totalBits-1; i++){ //genera los bits representativos del valor decimal
-        residuo = decimal % 2;
-        decimal = decimal / 2;
-        binario[cont] = (int)residuo;
-        cont--;
+        float residuo;
+        int cont = totalBits-1;
+        for(int k = 0; k < totalBits; k++){//inicializa en 0's el arreglo donde se almacenara el numero en binario
+            binario[k] = 0;
+        }                                        
+        for(int i = 0; i < totalBits-1; i++){ //genera los bits representativos del valor decimal
+            residuo = decimal % 2;
+            decimal = decimal / 2;
+            binario[cont] = (int)residuo;
+            cont--;
+        }
+        binario[cont] = decimal;
     }
-    binario[cont] = decimal;
-}
-    //funcion para traducir de binario a decimal
+    /**
+    *   binarioDecimal
+    *   @code funcion para traducir de binario a decimal
+    *   @param binario[] entradad de binario
+    *   @return decimal - int
+    */
     int binarioDecimal(int binario[], int totalValores){
         int decimal = 0, cont = 0;
         for(int i = totalValores - 1; i >= 0; i--){
@@ -70,7 +83,13 @@ public class Ejecutar extends Thread{
         }
         return decimal;
     }
-    //funcion que pasa de binario a Hexadecximal
+    /**
+    *   binarioHexadecimal 
+    *   @code funcion que pasa de binario a Hexadecximal
+    *   @param dirBin[] entrada de binario
+    *   @param bitsBin bits del binario
+    *   @param dirHex[] guarda el valor hexadecimal
+    */
     void binarioHexadecimal(int dirBin[], int bitsBin, char dirHex[]){
         int cont = 3, valor, cont2 = 0;
         int[] aux = new int[4], dirAux = new int[30];
@@ -134,7 +153,18 @@ public class Ejecutar extends Thread{
             cont++;
         }
     }
-        //traduce los datos pasados como parametos en sus correspondientes bases, regresa ya sea la direccion virtual o la direccion fisica
+    /**
+    *   traducir 
+    *   @code traduce los datos pasados como parametos en sus correspondientes bases, 
+    *   regresa ya sea la direccion virtual o la direccion fisica
+    *   @param indicePagMar[] indice del marco de pagina
+    *   @param bitsPagMar bits del marco de pagina
+    *   @param desplazamiento desplazamiento
+    *   @param bitsDesplazamiento bits de dezplazamiento
+    *   @param dirBin[] direccion en binario
+    *   @param dirDec[] direccion en decimal
+    *   @param dirHex[] direccion en hexadecimal
+    */
     void traducir(int indicePagMar, int bitsPagMar, int desplazamiento, int bitsDesplazamiento, int[] dirBin, int[] dirDec, char[] dirHex){
         int i;
         direccionBases(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
@@ -154,7 +184,18 @@ public class Ejecutar extends Thread{
         System.out.println();
             //Imprime dirBin, dirDec, dirHex	
     }
-    //calcula la direccion en base 2, 10 y 16
+    /**
+    *   direccionBases 
+    *   @code calcula la direccion en base 2, 10 y 16
+    *   regresa ya sea la direccion virtual o la direccion fisica
+    *   @param indicePagMar[] indice del marco de pagina
+    *   @param bitsPagMar bits del marco de pagina
+    *   @param desplazamiento desplazamiento
+    *   @param bitsDesplazamiento bits de dezplazamiento
+    *   @param dirBin[] direccion en binario
+    *   @param dirDec[] direccion en decimal
+    *   @param dirHex[] direccion en hexadecimal
+    */
     void direccionBases(int indicePagMar, int bitsPagMar, int desplazamiento, int bitsDesplazamiento, int[] dirBin, int[] dirDec, char[] dirHex){ //que se modifique la variable
         int i, cont = 0, aux = 9;
         int[] aux1 = new int[bitsPagMar], aux2 = new int[bitsDesplazamiento];
@@ -171,14 +212,27 @@ public class Ejecutar extends Thread{
         dirDec[0] = binarioDecimal(dirBin, bitsPagMar + bitsDesplazamiento);//pasa de binario a decimal
         binarioHexadecimal(dirBin, bitsPagMar + bitsDesplazamiento, dirHex);//pasa de binario a Hexadecimal
     }
-    //calcula la longitud de una cadena
+    /**
+    *   longitudCadena 
+    *   @code   calcula la longitud de una cadena
+    *   regresa ya sea la direccion virtual o la direccion fisica
+    *   @param cadena[] entrada como cadena
+    *   @return int
+    */
     int longitudCadena(char cadena[]){
             int longOrdenDes = 0, i = 0;
             for (i = 0; cadena[i] != '\0'; i++)
                     longOrdenDes++;
             return longOrdenDes;
     }
-    //Traduce un arreglo de caracteres con simbolos numericos a su valor entero dentro de una variable del mismo tipo
+    /**
+    *   cadenaToEntero 
+    *   @code Traduce un arreglo de caracteres con simbolos numericos a su valor entero 
+    *   dentro de una variable del mismo tipo
+    *   @param cadena[] cadenad de entrada
+    */
+
+    /////////////////////////////////////////////// ANDRES ME QUEDE POR AQUI
     int cadenaToEntero(char cadena[]){
             /*Convertir de char a entero Orden Desplazamiento*/
             int unidad = 1, i = 0, enteroChar = 0, suma = 0;
@@ -191,7 +245,12 @@ public class Ejecutar extends Thread{
             }
             return suma;
     }
-    //Cuenta el numero de bits que se necesita para poder direccionar un valor numerico
+    /**
+    *   contadorBits 
+    *   @code Cuenta el numero de bits que se necesita para poder direccionar un valor numerico
+    *   dentro de una variable del mismo tipo
+    *   @param numBytes[] entrada de binario
+    */
     int contadorBits(int numBytes){
             int bits = 0, i = 0;
             for (i = 0; numBytes != 1; i++){
@@ -200,8 +259,14 @@ public class Ejecutar extends Thread{
             }
             return bits;
     }
-    //hace la siguiente referencia del proceso en cuestion
-    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias, String[] procesosFinalizados){
+    /**
+    *   realizarReferencia 
+    *   @code hace la siguiente referencia del proceso en cuestion
+    *   @param indiceProcesoDespachar[] entrada de binario
+    *   @param memFisica bits del binario
+    *   @param memorias[] guarda el valor hexadecimal
+    */
+    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias){
             int indicePagMar = 0, desplazamiento = 0, bitsPagMar = 0, bitsDesplazamiento = 0; 
             int[] dirBin = new int[30], dirDec = {};
             char[] dirHex = new char[30];
@@ -375,8 +440,14 @@ public class Ejecutar extends Thread{
             listaProcesos[indiceProcesoDespachar].orden = vacio;
             /**************************/
     }
-    //hace la simulacion del quantum -> 3 segundo -> 1 segundo = 1 referencia
-    int quantum(int[] contPaquetesAct, int indiceProcesoDespachar, int memFisica[], Memorias memorias) throws InterruptedException{
+    /**
+    *   quantum 
+    *   @code    hace la simulacion del quantum -> 3 segundo -> 1 segundo = 1 referencia
+    *   @param contProcesosAct[] entrada de binario
+    *   @param indiceProcesoDespachar bits del binario
+    *   @param memFisica[] guarda el valor hexadecimal
+    */
+    int quantum(int[] contProcesosAct, int indiceProcesoDespachar, int memFisica[], Memorias memorias, String[] procesosFinalizados) throws InterruptedException{
         int contReferencias = 0, j = 0, total_referencias = 0;
         boolean procesoFinalizado = false; 
         //calcula el total de invocaciones restantes
@@ -406,7 +477,7 @@ public class Ejecutar extends Thread{
         if(total_referencias == 0){//si ya no hay mas referencias y/o invocaciones pendientes en el proceso 
             procesosFinalizados[datos.getContProcesosFinalizados()[0]] = listaProcesosDespachar[0];
             // Se elimina el proceso que marque el indice y se acomoda el registro
-            for(int i = 0; i < contPaquetesAct[0]; i++){//se elimina de las estructuras ordenadas
+            for(int i = 0; i < contProcesosAct[0]; i++){//se elimina de las estructuras ordenadas
                 listaProcesosDespachar[i] = listaProcesosDespachar[i+1];
                 registroTablaPaginas[i] = registroTablaPaginas[i+1];
                 if(i == (TOTAL_P-1)){
@@ -415,7 +486,7 @@ public class Ejecutar extends Thread{
                     registroTablaPaginas[i] = 0;
                 }
             }
-            for(int i = indiceProcesoDespachar; i < contPaquetesAct[0]; i++){//se elimina de la estructura registro
+            for(int i = indiceProcesoDespachar; i < contProcesosAct[0]; i++){//se elimina de la estructura registro
                 listaProcesos[i].nombre = listaProcesos[i+1].nombre;
                 listaProcesos[i].totalPaginas = listaProcesos[i+1].totalPaginas;
                 listaProcesos[i].orden = listaProcesos[i+1].orden;
@@ -429,10 +500,16 @@ public class Ejecutar extends Thread{
         }
         
         datos.setListaProcesos(listaProcesos);
-        datos.setListaProcesosDespachar(ListaProcesosDespachar);
+        datos.setListaProcesosDespachar(listaProcesosDespachar);
         return total_referencias;
     }
-    //despacha al proceso dentro de la opcion 2 del menu
+    /**
+    *   despacharProceso 
+    *   @code  despacha al proceso dentro de la opcion 2 del menu
+    *   @param dirBin[] entrada de binario
+    *   @param bitsBin bits del binario
+    *   @param dirHex[] guarda el valor hexadecimal
+    */
     int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar, Procesos[] listaProcesos, String[] procesosFinalizados) throws InterruptedException{
         int indiceProcesoDespachar = 0,  pos = 0; //indices
         int contReferencias = 0, totalReferenciasFinal = 3; //contadores
@@ -495,6 +572,4 @@ public class Ejecutar extends Thread{
     }
 }
 
-
-
-
+//TERMINADO

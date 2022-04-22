@@ -1,4 +1,11 @@
-public class Registro{ /*Entradas de la tabla de paginas*/
+public class Registro{
+    /**
+    *   Docs de Registro
+    * Entradas de la tabla de paginas
+    * @code toma los parametros como entrada de la tabla de paginas, tomandolos como bit.
+    * haciendo referencia a que cada variable es un bit, excetuando el num_marco que se
+    * establece como el marco donde se encuentra la pagina
+    */
     int referida;     // bit
     int modificada;   // bit
     int proteccion;   // bit
@@ -12,3 +19,5 @@ public class Registro{ /*Entradas de la tabla de paginas*/
         this.num_marco = num_marco;
     }
 }
+
+//TERMINADO
