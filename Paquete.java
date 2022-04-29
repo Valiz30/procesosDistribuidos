@@ -1,11 +1,12 @@
+import java.io.Serializable;
+
 /**
 * Docs Paquete  CLIENTE
 * @code Paquete que se envia al servidor
 * proceso Es el proceso que se guarda en el paquete
 * procesoExiste es la bandera que controla, sin existe un proceso en el paquete
 */
-import java.io.Serializable;
-public class Paquete implements Serializable{
+public class Paquete implements Serializable {
     Procesos proceso;
     boolean procesoExiste;
     public Paquete(Procesos proceso, boolean procesoExiste){
@@ -24,7 +25,6 @@ public class Paquete implements Serializable{
     public boolean getProcesoExiste(){
         return this.procesoExiste;
     }
-
 }
 
 //TERMINADO
