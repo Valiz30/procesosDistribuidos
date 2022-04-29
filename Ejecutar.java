@@ -1,22 +1,27 @@
-import static java.lang.Math.*;
-
+ import static java.lang.Math.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 public class Ejecutar extends Thread{
     Procesos[] listaProcesos;
     Memorias memorias;
     int TOTAL_P = 30, TOTAL_PAG = 50, AUX = 50,contRefTotales = 0;
-    int[] contProcesosAct = {},registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][]) //contadores
-    int[] memFisica = new int[memorias.tamMemFis]; //variable de la memoria fisica
+    int[] contProcesosAct = {0},registroTablaPaginas = new int[30]; //arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][]) //contadores
+    int[] memFisica; //variable de la memoria fisica
     Registro[] tablaPaginas = new Registro[50]; 
-    String[] listaProcesosDespachar,procesosFinalizados;
+    String[] listaProcesosDespachar, procesosFinalizados = new String[30];
+    String nombreCliente, nombreHilo = "Ejecutar";
     Datos datos;
-
-    public Ejecutar(Memorias memorias, Datos datos){
+    SimuladorInterfaz sInterfaz;
+    public Ejecutar(Memorias memorias, Datos datos, String nombreCliente, SimuladorInterfaz sInterfaz){
+        memFisica = new int[memorias.tamMemFis];
         for (int i = 0; i < memorias.tamMemFis; i++)
             memFisica[i] = 0;
         this.memorias = memorias;
         this.datos = datos;
+        this.nombreCliente = nombreCliente;
+        this.sInterfaz = sInterfaz;
     }
 
     /**
@@ -24,15 +29,30 @@ public class Ejecutar extends Thread{
     * @code actuando como hilo.  Anade las paginas del proceso nuevo a la tabla de paginas
     */
     public void run(){
+        
+        boolean usar;
         while(true){
-            if(datos.getProcesosPendientes() == true){
+            //System.out.println("Ejecutar");
+            usar = true;
+            datos.setNombreHilo(nombreHilo);
+            while(datos.getNombreHilo() != nombreHilo && usar == true){//identifica si el hilo puede actuar o si espera
+                try {
+                    Thread.sleep(1000);
+                    datos.setNombreHilo(nombreHilo);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Ejecutar.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if(datos.getContProcesosAct()[0] > 0){
+                //actualizamos nuestras variables
                 contProcesosAct = datos.getContProcesosAct();
                 listaProcesosDespachar = datos.getListaProcesosDespachar();
                 listaProcesos = datos.getListaProcesos();
                 procesosFinalizados = datos.getProcesosFinalizados();
+                tablaPaginas = datos.getTablaPaginas();
                 if(contProcesosAct[0] != 0){
                     try{
-                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos, procesosFinalizados));
+                        datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos, procesosFinalizados, tablaPaginas));
                         for(int i = 0; i < contProcesosAct[0]; i++){
                             contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
                         }
@@ -44,7 +64,14 @@ public class Ejecutar extends Thread{
                     datos.setProcesosPendientes(false);
                     break;
                 }
+                
             }
+            if(datos.getSalir() == true){
+                System.out.println("Terminar Ejecutar");
+                break;
+            }
+            //System.out.println("Final Ejecutar");
+            usar = false;
         }
     }
     /**
@@ -165,24 +192,29 @@ public class Ejecutar extends Thread{
     *   @param dirDec[] direccion en decimal
     *   @param dirHex[] direccion en hexadecimal
     */
-    void traducir(int indicePagMar, int bitsPagMar, int desplazamiento, int bitsDesplazamiento, int[] dirBin, int[] dirDec, char[] dirHex){
+    void traducir(int indicePagMar, int bitsPagMar, int desplazamiento, int bitsDesplazamiento, int[] dirBin, int[] dirDec, char[] dirHex, Procesos[] listaProcesos, int indiceProcesoDespachar){
         int i;
+        String cadenaEnviar = "";
         direccionBases(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
-        System.out.println(" Binaria: ");
+        cadenaEnviar = cadenaEnviar + "," + "PROCESO: " + listaProcesos[indiceProcesoDespachar].getNombre() + " - Binaria: ";
         for(i = 0; i < bitsDesplazamiento + bitsPagMar; i++){
-            System.out.print(dirBin[i]);
+            cadenaEnviar = cadenaEnviar + dirBin[i];
         }
-        System.out.println(" Decimal: "+dirDec[0]);
-        System.out.println(" Hexadecimal: ");
+        cadenaEnviar = cadenaEnviar + " - Decimal: " + dirDec[0];
+        cadenaEnviar = cadenaEnviar + " - Hexadecimal: ";
         for(i = 0; i < 30; i++){
             if(dirHex[i] != 'G'){
-                System.out.print(dirHex[i]);
+                cadenaEnviar = cadenaEnviar + dirHex[i];
             }else{
                 break;
             } 
         }
-        System.out.println();
-            //Imprime dirBin, dirDec, dirHex	
+        try{
+            sInterfaz.imprimir(cadenaEnviar, listaProcesos[indiceProcesoDespachar].getNombre());
+        }catch(Exception e) {
+            System.err.println("Servidor excepcion: "+ e.getMessage());
+            e.printStackTrace();
+        }
     }
     /**
     *   direccionBases 
@@ -230,14 +262,12 @@ public class Ejecutar extends Thread{
     *   @code Traduce un arreglo de caracteres con simbolos numericos a su valor entero 
     *   dentro de una variable del mismo tipo
     *   @param cadena[] cadenad de entrada
+    *   @return suma - int
     */
-
-    /////////////////////////////////////////////// ANDRES ME QUEDE POR AQUI
     int cadenaToEntero(char cadena[]){
             /*Convertir de char a entero Orden Desplazamiento*/
             int unidad = 1, i = 0, enteroChar = 0, suma = 0;
-            for (i = longitudCadena(cadena) - 1; i != -1; i--)
-            {
+            for (i = longitudCadena(cadena) - 1; i != -1; i--){
                     enteroChar = cadena[i] - '0';
                     enteroChar = enteroChar * unidad;
                     suma = suma + enteroChar;
@@ -250,6 +280,7 @@ public class Ejecutar extends Thread{
     *   @code Cuenta el numero de bits que se necesita para poder direccionar un valor numerico
     *   dentro de una variable del mismo tipo
     *   @param numBytes[] entrada de binario
+    *   @return bits - int
     */
     int contadorBits(int numBytes){
             int bits = 0, i = 0;
@@ -262,15 +293,15 @@ public class Ejecutar extends Thread{
     /**
     *   realizarReferencia 
     *   @code hace la siguiente referencia del proceso en cuestion
-    *   @param indiceProcesoDespachar[] entrada de binario
-    *   @param memFisica bits del binario
-    *   @param memorias[] guarda el valor hexadecimal
+    *   @param indiceProcesoDespachar[] indice proceso de despachar
+    *   @param memFisica representacion de la memoria fisica
+    *   @param memorias[] informacion sobre la memoria fisica, virtual
     */
-    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias){
+    void realizarReferencia(int indiceProcesoDespachar, int memFisica[], Memorias memorias, Procesos[] listaProcesos, Registro[] tablaPaginas, String[] listaProcesosDespachar){
             int indicePagMar = 0, desplazamiento = 0, bitsPagMar = 0, bitsDesplazamiento = 0; 
-            int[] dirBin = new int[30], dirDec = {};
+            int[] dirBin = new int[30], dirDec = {0};
             char[] dirHex = new char[30];
-
+            String cadenaEnviar = "";
             desplazamiento = memorias.tamPag;//asginacion para saber cual es el tamño de la pagina
             bitsDesplazamiento = contadorBits(desplazamiento);//en base a la asignacion anterior se obtien el total de bits
 
@@ -290,7 +321,14 @@ public class Ejecutar extends Thread{
             int i = 0, indice = 0;
             for (i = 0; i < 3; i++){
                     if (listaProcesosDespachar[i] == nombre){
-                            System.out.println(" Proceso encontrado: "+listaProcesosDespachar[i]);
+                            cadenaEnviar = cadenaEnviar + "," + " Proceso encontrado: "+listaProcesosDespachar[i];
+                        try{
+                            sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[i]);
+                        }catch(Exception e) {
+                            System.err.println("Servidor excepcion: "+ e.getMessage());
+                            e.printStackTrace();
+                        }
+                            cadenaEnviar = "";
                             indice = i;
                             break;
                     }
@@ -311,10 +349,12 @@ public class Ejecutar extends Thread{
             /* Encontrar el primer Orden desplazamiento*/
             int indiceFinal = 0;
             for(int k = 0; k < registroOrdenRemplazo.length; k++){
-                if(registroOrdenRemplazo[k] == ',');
+                if(registroOrdenRemplazo[k] == ','){
                     indiceFinal = k;
+                    break;
+                }
             }
-            char[] ordenDesplazamiento = listaProcesos[indiceProcesoDespachar].orden.substring(0, indiceFinal).toCharArray();//almacena la primera invocacion
+            char[] ordenDesplazamiento = listaProcesos[indiceProcesoDespachar].orden.substring(0, indiceFinal+1).toCharArray();//almacena la primera invocacion
             /*Longitud del arreglo encontrado ordenDesplazamiento*/
             int longOrdenDes = 1; /* El tamaño toma en cuenta la coma, incrementando a 1 */
             i = 0;
@@ -327,24 +367,36 @@ public class Ejecutar extends Thread{
             int bandera = 0;
             /*Separacion de variable*/
             int contadorArreglo = 0;
-            for (i = 0; i < longOrdenDes - 1; i++){
-                    if (ordenDesplazamiento[i] == ' '){//si en el arreglo de caracteres que contiene la primera invocacion, encuentra un espacio, quiere decir que lo que continua es el desplazamiento
-                            bandera = 1;//activa la bandera para indicar que sigue el desplazamiento
-                            contadorArreglo = -1; /* Toma en cuenta que no se hace nada en el espacio, y el sig suma para que quede en 0 */
-                    }
-                    if (ordenDesplazamiento[i] != ' '){
-                            if (bandera == 0)
-                                    numeroPaginaSep[contadorArreglo] = ordenDesplazamiento[i];//si la bandera no esta en 1, quiere decir que lee el numero de pagina
-                            else
-                                    desplazamientoSep[contadorArreglo] = ordenDesplazamiento[i];//si la bandera esta en 1, quiere decir que ahora leera el desplazamiento
-                    }
-                    contadorArreglo++;
+            for (i = 0; i < ordenDesplazamiento.length; i++){
+                if(ordenDesplazamiento[i] == ','){
+                    break;
+                }
+                if (ordenDesplazamiento[i] == ' '){//si en el arreglo de caracteres que contiene la primera invocacion, encuentra un espacio, quiere decir que lo que continua es el desplazamiento
+                        bandera = 1;//activa la bandera para indicar que sigue el desplazamiento
+                        contadorArreglo = -1; /* Toma en cuenta que no se hace nada en el espacio, y el sig suma para que quede en 0 */
+                }
+                if (ordenDesplazamiento[i] != ' '){
+                        if (bandera == 0)
+                                numeroPaginaSep[contadorArreglo] = ordenDesplazamiento[i];//si la bandera no esta en 1, quiere decir que lee el numero de pagina
+                        else
+                                desplazamientoSep[contadorArreglo] = ordenDesplazamiento[i];//si la bandera esta en 1, quiere decir que ahora leera el desplazamiento
+                }
+                contadorArreglo++;
             }
+            //System.out.println("DESPLAZAMIENTO "+desplazamientoSep[0]);
+            for(int x = 0; x < ordenDesplazamiento.length; x++)
+                //System.out.println(" orden DESPLAZAMIENTO "+ordenDesplazamiento[x]);
             /*Convertir la cadenas a int, tanto el numero de pagina como el numero de desplazamiento*/
             numpaginaInt = cadenaToEntero(numeroPaginaSep);
             desplazamientoInt = cadenaToEntero(desplazamientoSep);
-            System.out.println(" Num. Pag: "+numpaginaInt+", Desplazamiento: "+desplazamientoInt);
-
+            cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" Num. Pag: "+numpaginaInt+", Desplazamiento: "+desplazamientoInt;
+            try{
+                sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+            }catch(Exception e) {
+                System.err.println("Servidor excepcion: "+ e.getMessage());
+                e.printStackTrace();
+            }
+            cadenaEnviar = "";
             /*******************************************************************************************************/
 
             /* número  de  página  espacio desplazamiento. "4 56"	*/
@@ -355,12 +407,26 @@ public class Ejecutar extends Thread{
             bitsPagMar = bitsNumPagVirtual;
             desplazamiento = desplazamientoInt;
             /* bitsDesplazamiento se declaro al inicio */
-            System.out.println(" Direccion Virtual: ");
-            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+            cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" Direccion Virtual: ";
+            try{
+                sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+            }catch(Exception e) {
+                System.err.println("Servidor excepcion: "+ e.getMessage());
+                e.printStackTrace();
+            };
+            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex, listaProcesos, indiceProcesoDespachar); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+            cadenaEnviar = "";
             /*********************************/
             /*Buscara la pagina en memoria fisica*/
             if (tablaPaginas[posPagToReferencia+numpaginaInt].presen_ausen == 0){ /*No se encuentra*/
-                    System.out.println(" FALLO DE PAGINA: ");
+                    cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" FALLO DE PAGINA: ";
+                    try{
+                        sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+                    }catch(Exception e) {
+                        System.err.println("Servidor excepcion: "+ e.getMessage());
+                        e.printStackTrace();
+                    }
+                    cadenaEnviar = "";
                     int BitsLibres = 0;
                     int marcoPaginaIndice = 0;
                     for (i = 0; i < memorias.tamMemFis; i += memorias.tamPag){//busca espacios libres en memoria fisica
@@ -383,8 +449,15 @@ public class Ejecutar extends Thread{
                             bitsPagMar = bitsMarcoFisica;
                             /* desplazamiento se declaro en Imprimir direccion virtual */
                             /* bitsDesplazamiento se declaro al inicio */
-                            System.out.println(" Direccion Fisica: ");
-                            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                            cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" Direccion Fisica: ";
+                            try{
+                                sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+                            }catch(Exception e) {
+                                System.err.println("Servidor excepcion: "+ e.getMessage());
+                                e.printStackTrace();
+                            }
+                            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex, listaProcesos, indiceProcesoDespachar); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                            cadenaEnviar = "";
                     }
                     else{ /*No se encuentra libre un marco*/
                             /*Eliminar una pagina que este en el marco aleatoriamente*/
@@ -415,9 +488,23 @@ public class Ejecutar extends Thread{
                             /* desplazamiento se declaro en Imprimir direccion virtual */
                             /* bitsDesplazamiento se declaro al inicio */
                             /* Imprimir la direccion fisica*/
-                            System.out.println(" FALLO DE PAGINA: ");
-                            System.out.println(" Direccion Fisica: ");
-                            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                            cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" FALLO DE PAGINA: ";
+                            try{
+                                sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+                            }catch(Exception e) {
+                                System.err.println("Servidor excepcion: "+ e.getMessage());
+                                e.printStackTrace();
+                            }
+                            cadenaEnviar = "";
+                            cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" Direccion Fisica: ";
+                            try{
+                                sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+                            }catch(Exception e) {
+                                System.err.println("Servidor excepcion: "+ e.getMessage());
+                                e.printStackTrace();
+                            }
+                            traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex, listaProcesos, indiceProcesoDespachar); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                            cadenaEnviar = "";
                     }
             }
             else{	/*Se encuentra en memoria fisica la pagina- Imprimir la memoria Fisica*/
@@ -427,27 +514,43 @@ public class Ejecutar extends Thread{
                     bitsPagMar = bitsMarcoFisica;
                     /* desplazamiento se declaro en Imprimir direccion virtual */
                     /* bitsDesplazamiento se declaro al inicio */
-                    System.out.println(" YA ESTABA EN MEMORIA FISICA: ");
-                    System.out.println(" Direccion Fisica: ");
-                    traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
+                    cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" YA ESTABA EN MEMORIA FISICA: ";
+                    try{
+                        sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+                    }catch(Exception e) {
+                        System.err.println("Servidor excepcion: "+ e.getMessage());
+                        e.printStackTrace();
+                    }
+                    cadenaEnviar = "";
+                    cadenaEnviar = cadenaEnviar + "," + "PROCESO: "+listaProcesos[indiceProcesoDespachar].getNombre()+" Direccion Fisica: ";
+                    try{
+                        sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[indice]);
+                    }catch(Exception e) {
+                        System.err.println("Servidor excepcion: "+ e.getMessage());
+                        e.printStackTrace();
+                    }
+                    cadenaEnviar = "";
+                    traducir(indicePagMar, bitsPagMar, desplazamiento, bitsDesplazamiento, dirBin, dirDec, dirHex, listaProcesos, indiceProcesoDespachar); // pasara # de pagina, # marco, valor desplazamiento y los arreglos donde se almacenaran las bases
                     tablaPaginas[posPagToReferencia].referida = 1;
             }
             /*- debera de modificar el la entrada que le pertenece a dicho proceso en la tabla de paginas 	*/
 
             /*Eliminar la invocacion de la variable registro[indiceProceso] */
             /* El 0 se cambia por indiceProceso*/
-            String vacio = listaProcesos[indiceProcesoDespachar].orden.substring(indiceFinal);
+            String vacio = listaProcesos[indiceProcesoDespachar].orden.substring(indiceFinal+1);
             listaProcesos[indiceProcesoDespachar].orden = vacio;
             /**************************/
     }
     /**
     *   quantum 
     *   @code    hace la simulacion del quantum -> 3 segundo -> 1 segundo = 1 referencia
-    *   @param contProcesosAct[] entrada de binario
-    *   @param indiceProcesoDespachar bits del binario
-    *   @param memFisica[] guarda el valor hexadecimal
+    *   @param contProcesosAct[] contador de los procesos Actuales
+    *   @param indiceProcesoDespachar indice de procesos a despachar
+    *   @param memFisica[] representacion de la memoria fisica
+    *   @param memorias informacion sobre las memorias.A
+    *   @param procesosFinalizados array de los procesos finalizados
     */
-    int quantum(int[] contProcesosAct, int indiceProcesoDespachar, int memFisica[], Memorias memorias, String[] procesosFinalizados) throws InterruptedException{
+    int quantum(int[] contProcesosAct, int indiceProcesoDespachar, int memFisica[], Memorias memorias, String[] procesosFinalizados, Procesos[] listaProcesos, Registro[] tablaPaginas, String[] listaProcesosDespachar) throws InterruptedException{
         int contReferencias = 0, j = 0, total_referencias = 0;
         boolean procesoFinalizado = false; 
         //calcula el total de invocaciones restantes
@@ -460,11 +563,12 @@ public class Ejecutar extends Thread{
         contReferencias = 1;
         //ciclo donde se hara la simulacion del quantum
         while(total_referencias > 0 && contReferencias <= 3){
-            realizarReferencia(indiceProcesoDespachar, memFisica, memorias); //solo hace una referencia
+            realizarReferencia(indiceProcesoDespachar, memFisica, memorias, listaProcesos, tablaPaginas, listaProcesosDespachar); //solo hace una referencia
             total_referencias--;
             TimeUnit.SECONDS.sleep(1);
             contReferencias++;
-        }  
+        }
+        datos.setTablaPaginas(tablaPaginas);
         j = 0;
         contReferencias = 0;
         //calcula el total de invocaciones restantes
@@ -475,7 +579,12 @@ public class Ejecutar extends Thread{
         }
         total_referencias = contReferencias;
         if(total_referencias == 0){//si ya no hay mas referencias y/o invocaciones pendientes en el proceso 
-            procesosFinalizados[datos.getContProcesosFinalizados()[0]] = listaProcesosDespachar[0];
+            int[] contProcesosFinalizados = datos.getContProcesosFinalizados();
+            //System.out.println("contador procesos finalizados"+contProcesosFinalizados[0]);
+            procesosFinalizados[contProcesosFinalizados[0]] = listaProcesosDespachar[0];
+            contProcesosFinalizados[0]++;
+            datos.setprocesosFinalizados(procesosFinalizados);
+            datos.setContProcesosFinalizados(contProcesosFinalizados);
             // Se elimina el proceso que marque el indice y se acomoda el registro
             for(int i = 0; i < contProcesosAct[0]; i++){//se elimina de las estructuras ordenadas
                 listaProcesosDespachar[i] = listaProcesosDespachar[i+1];
@@ -506,11 +615,12 @@ public class Ejecutar extends Thread{
     /**
     *   despacharProceso 
     *   @code  despacha al proceso dentro de la opcion 2 del menu
-    *   @param dirBin[] entrada de binario
-    *   @param bitsBin bits del binario
-    *   @param dirHex[] guarda el valor hexadecimal
+    *   @param contProcesosAct[]contador de procesos actuales
+    *   @param listaProcesosDespachar array de string de los procesos a despachar
+    *   @param listaProcesos[] lista de los procesos
+    *   @param procesosFinalizados[] array de los procesos finalizados
     */
-    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar, Procesos[] listaProcesos, String[] procesosFinalizados) throws InterruptedException{
+    int[] despacharProceso(int contProcesosAct[], String[] listaProcesosDespachar, Procesos[] listaProcesos, String[] procesosFinalizados, Registro[] tablaPaginas) throws InterruptedException{
         int indiceProcesoDespachar = 0,  pos = 0; //indices
         int contReferencias = 0, totalReferenciasFinal = 3; //contadores
         int aux = 0, aux2=0; //auxiliares
@@ -564,7 +674,8 @@ public class Ejecutar extends Thread{
                 break;
             }
         }
-        totalReferenciasFinal = quantum(contProcesosAct, indiceProcesoDespachar, memFisica, memorias, procesosFinalizados); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
+        while(totalReferenciasFinal > 0)
+            totalReferenciasFinal = quantum(contProcesosAct, indiceProcesoDespachar, memFisica, memorias, procesosFinalizados, listaProcesos, tablaPaginas, listaProcesosDespachar); //le pasa el indice que tiene el proceso en la variable Registro[TOTAL_P];
         if(totalReferenciasFinal == 0){//si el proceso ha sido eliminado, se decrementa el contador que lleva el control del total de proceso existentes
             contProcesosAct[0]--;
         }

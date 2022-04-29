@@ -1,38 +1,63 @@
+import java.util.logging.Level;
+import java.util.logging.Logger;
 public class ProcesoNuevo extends Thread{
     /**
-    * Docs ProcesoNuevo
+    * Docs ProcesoNuevo CLIENTE
     * @code Envia la carga y los procesos que ya finalizaron
     */
     Datos datos;
     Paquete paqueteNuevo;
-    int[] contProcesosAct = {}, contProcesosFinalizados = {}, contadorTabla = {},registroTablaPaginas;
-    String[] listaProcesosDespachar, procesosFinalizados;
+    int[] contProcesosAct = {0}, contProcesosFinalizados = {0}, contadorTabla = {0},registroTablaPaginas;
+    String[] listaProcesosDespachar, procesosFinalizados =  new String[30];
+    String nombreCliente, nombreHilo = "ProcesoNuevo";
     Procesos[] listaProcesos;
     SimuladorInterfaz sInterfaz;
     Registro[] tablaPaginas = new Registro[100];
-    public ProcesoNuevo(Datos datos, SimuladorInterfaz sInterfaz){
+    
+    public ProcesoNuevo(Datos datos, SimuladorInterfaz sInterfaz, String nombreCliente){ // Recive Datos de las variables que utilizara el cliente y su interfaz asi como el nombre del cliente
         this.datos = datos;
         this.sInterfaz = sInterfaz;
         contadorTabla[0] = 0;
+        this.nombreCliente = nombreCliente;
     }
     /**
     * Docs ProcesoNuevo
     * @code Actua como hilo para el envio de la carga y los procesos finalizados
     */
     public void run(){
+        
+        boolean usar;
         while(true){
+            //System.out.println("ProcesoNuevo");
+            usar = true;
+            datos.setNombreHilo(nombreHilo); // Establece el nombre del hilo para el uso de las variables del cliente
+            while(datos.getNombreHilo() != nombreHilo && usar == true){  // Si el nombre es diferente al de inicializacion se ejecuta
+                try {
+                    Thread.sleep(1000); // el hilo duerme durante 10 segundos
+                    datos.setNombreHilo(nombreHilo); // y reestablece el nombre del hilo
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ProcesoNuevo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             try{
+                // Se establecen valores para el nuevo paquete; Contador de referencias totales, Arreglo de procesos finalizados, contador de procesos finalizados
+                try {
+                    Thread.sleep(15000); // el hilo duerme durante 10 segundos
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ProcesoNuevo.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 paqueteNuevo = sInterfaz.actualizar(datos.getContRefTotales(), datos.getProcesosFinalizados(), datos.getContProcesosFinalizados());
-                if(paqueteNuevo.procesoExiste == true){
+                if(paqueteNuevo.getProcesoExiste() == true){ // Si el proceso del paquete actual es exite se llaman las siguentes funciones
+                    //System.out.println("ProcesoExiste");
                     contProcesosAct = datos.getContProcesosAct();//verificar procesos existentes
-                    listaProcesosDespachar = datos.getListaProcesosDespachar();
-                    registroTablaPaginas = datos.getRegistroTablaPaginas();
-                    listaProcesos = datos.getListaProcesos();
-                    tablaPaginas = datos.getTablaPaginas();
+                    listaProcesosDespachar = datos.getListaProcesosDespachar(); // Consigue la lista de procesos que se despachara
+                    registroTablaPaginas = datos.getRegistroTablaPaginas(); // 
+                    listaProcesos = datos.getListaProcesos(); // 
+                    tablaPaginas = datos.getTablaPaginas(); // 
                     registrar(paqueteNuevo, contProcesosAct, listaProcesosDespachar, registroTablaPaginas, listaProcesos, tablaPaginas);
                 }
                 for(int i = 0; i < contProcesosFinalizados[0]; i++){
-                    procesosFinalizados[i] = ""; 
+                    procesosFinalizados[i] = "0"; 
                 }
                 contProcesosFinalizados[0] = 0;
                 datos.setContProcesosFinalizados(contProcesosFinalizados);
@@ -41,6 +66,12 @@ public class ProcesoNuevo extends Thread{
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();
             }
+            if(datos.getSalir() == true){
+                System.out.println("Terminar ProcesoNuevo");
+                break;
+            }
+            //System.out.println("Final ProcesoNuevo");
+            usar = false;
         }
     }
     /**
@@ -52,7 +83,7 @@ public class ProcesoNuevo extends Thread{
     * @return procesoNuevo - Procesos
     */
     Procesos registrarDatos(Paquete paqueteNuevo, String[] listaProcesosDespachar, int[] contProcesosAct){//se tiene que lanzar como promt 
-        Procesos procesoNuevo = new Procesos(paqueteNuevo.proceso.nombre, paqueteNuevo.proceso.totalPaginas, paqueteNuevo.proceso.orden, paqueteNuevo.proceso.n_inv);
+        Procesos procesoNuevo = new Procesos(paqueteNuevo.getProceso().getNombre(), paqueteNuevo.proceso.totalPaginas, paqueteNuevo.proceso.orden, paqueteNuevo.proceso.n_inv);
         listaProcesosDespachar[contProcesosAct[0]] = procesoNuevo.nombre ;
 	    return procesoNuevo;
     }

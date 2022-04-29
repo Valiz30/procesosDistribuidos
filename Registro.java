@@ -1,6 +1,6 @@
 public class Registro{
     /**
-    *   Docs de Registro
+    *   Docs de Registro     CLIENTE
     * Entradas de la tabla de paginas
     * @code toma los parametros como entrada de la tabla de paginas, tomandolos como bit.
     * haciendo referencia a que cada variable es un bit, excetuando el num_marco que se

@@ -1,17 +1,16 @@
 class Datos{
-    /**
+    /**    CLIENTE 
     *   Docs Datos - Contiene las variables que utilizara el cliente.
     *   contProcesosAct, contRefTotales, contProcesosCliente,contProcesosFinalizados - Contadores
     *   registroTablaPaginas  Arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
     */
-    int[] contProcesosAct = {}, contProcesosCliente = {}, contProcesosFinalizados = {},registroTablaPaginas = new int[30]; 
+    int[] contProcesosAct = {0}, contProcesosFinalizados = {0},registroTablaPaginas = new int[30]; 
     String[] listaProcesosDespachar, procesosCliente = new String[30], procesosFinalizados = new String[30];
-    String nombreCliente = "";
+    String nombreCliente = "", nombreHilo = "";
     Registro[] tablaPaginas;
-    boolean procesosPendientes = false;
+    boolean procesosPendientes = false, salir = false;
     Procesos[] listaProcesos = new Procesos[30];
-    int carga, contRefTotales; 
-    
+    int carga, contRefTotales, contProcesosCliente, idCliente;
     /**
     *   Datos()
     *   @param contProcesosAct Contador de los procesos actualess
@@ -24,38 +23,39 @@ class Datos{
         this.registroTablaPaginas = registroTablaPaginas;
         this.listaProcesosDespachar = listaProcesosDespachar;
         this.tablaPaginas = tablaPaginas;
-        contRefTotales = 0;
-        contProcesosCliente[0] = 0;
-        contProcesosFinalizados[0] = 0;
-        carga = 0;
+        this.contRefTotales = 0;
+        this.contProcesosCliente = 0;
+        this.contProcesosFinalizados[0] = 0;
+        this.carga = 0;
+        for(int i = 0; i < 30; i++){
+            this.procesosFinalizados[i] = "0";
+            this.listaProcesos[i] = new Procesos("", 0, "", 0);
+        }
     }
     /**
     *   SETTER Y GETTERS DE LA CLASE DATOS CON SYNCRHONIZED
     * (que solamente un subproceso puede acceder a dicho método a la vez)
     */
+    public synchronized int getIdCliente(){
+        return this.idCliente;
+    }
+    public synchronized String getNombreHilo(){
+        return this.nombreHilo;
+    }
+    public synchronized boolean getSalir(){
+        return this.salir;
+    }
     public synchronized String getNombreCliente(){
         return this.nombreCliente;
     }
     public synchronized int[] getContProcesosFinalizados() {
         return this.contProcesosFinalizados;
     }
-    public synchronized int[] getContProcesosCliente(String nombreCliente) {
-        int[] contAux = new int[1];
-        contAux[0] = -1;
-        if(nombreCliente == this.nombreCliente){
-            return this.contProcesosCliente;
-        }else{
-            return contAux;
-        }
+    public int getContProcesosCliente() {
+        return this.contProcesosCliente;
     }
-    public synchronized String[] getProcesosCliente(String nombreCliente) {
-        String[] procesoAux = new String[1];
-        procesoAux[0] = "";
-        if(nombreCliente == this.nombreCliente){
-            return this.procesosCliente;
-        }else{
-            return procesoAux;
-        }
+    public String[] getProcesosCliente() {
+        return this.procesosCliente;
     }
     public synchronized String[] getProcesosFinalizados(){
         return this.procesosFinalizados;
@@ -84,33 +84,26 @@ class Datos{
     public synchronized Registro[] getTablaPaginas(){
         return this.tablaPaginas;
     }
+    public synchronized void setIdCliente(int idCliente){
+        this.idCliente = idCliente;
+    }
+    public synchronized void setNombreHilo(String nombreHilo){
+        this.nombreHilo = nombreHilo;
+    }
+    public synchronized void setSalir(boolean salir){
+        this.salir = salir;
+    }
     public synchronized void setNombreCliente(String nombreCliente){
         this.nombreCliente = nombreCliente;
     }
     public synchronized void setContProcesosFinalizados(int[] contProcesosFinalizados) {
         this.contProcesosFinalizados = contProcesosFinalizados;
     }
-    public synchronized int[] setContProcesosCliente(int[] contProcesosCliente, String nombreCliente) {
-        int[] contAux = new int[1];
-        contAux[0] = -1;
-        if(nombreCliente == this.nombreCliente){
-            this.contProcesosCliente = contProcesosCliente;
-            contAux[0] = 1;
-            return contAux;
-        }else{
-            return contAux; 
-        }
+    public void setContProcesosCliente(int contProcesosCliente) {
+        this.contProcesosCliente = contProcesosCliente;
     }
-    public synchronized int[] setProcesosCliente(String[] procesosCliente, String nombreCliente) {
-        int[] contAux = new int[1];
-        contAux[0] = -1;
-        if(nombreCliente == this.nombreCliente){
-            this.procesosCliente = procesosCliente;
-            contAux[0] = 1;
-            return contAux;
-        }else{
-            return contAux; 
-        }
+    public void setProcesosCliente(String[] procesosCliente) {
+        this.procesosCliente = procesosCliente;
     }
     public synchronized void setprocesosFinalizados(String[] procesosFinalizados){//pendiente pasar la bandera
         this.procesosFinalizados = procesosFinalizados;
@@ -143,3 +136,6 @@ class Datos{
 }
 
 //TERMINADO
+
+//getContadorProcesosCliente
+//getProcesosCliente and set

@@ -1,6 +1,6 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-    /**
+    /** SERVIDOR
     * Docs Interfaz RMI 
     * @code La interfaz remota con todas las operaciones que
     * puede realizar el clientes
@@ -10,12 +10,13 @@ public interface SimuladorInterfaz extends Remote { //se crea la interfaz remota
     * @code Registra el proceso por medio del nombre
     * @param nombre Se utilizar par registrar el nombre del proceso
     */
-    public void registrar(String nombre) throws RemoteException;
+    public int registrar(String nombre) throws RemoteException;
     /** 
     * @code recibe un paquete
     * @param paquete Es el paquete  que recibe en Paquete
+    * @param idCliente identificador dle cliente
     */
-    public boolean recibir(Paquete paquete) throws RemoteException;
+    public boolean recibir(Paquete paquete, int idCliente) throws RemoteException;
     /** 
     * @code actualiza el paquete recibiendo un objeto de tipo paquete
     * el Objeto podra determinar si hay un respuesta positiva o negativa ante la actualizacion
@@ -30,46 +31,24 @@ public interface SimuladorInterfaz extends Remote { //se crea la interfaz remota
     * @param nombreProcesos array de un los nombres de los procesos
     * @param contProcesosCliente contador de los procesos que tiene el cliente
     */
-    public boolean[] actualizarProceso(String[] nombreProcesos, int[] contProcesosCliente) throws RemoteException;
+    public boolean[] actualizarProceso(String[] nombreProcesos, int contProcesosCliente) throws RemoteException;
     /** 
     * @code eliminarClientes - elimina el cliente tanto como usuario y servidor
     * @param nombre nombre del cliente a eliminar
     */
     public void eliminarCliente(String nombre) throws RemoteException;
+    /** 
+    * @code actualizarImprimir - actualiza los datos a imprimir por cada cliente
+    * @param idCliente identificador para cada uno de los clientes
+    */
+    public String actualizarImprimir(int idCliente) throws RemoteException;
+    /** 
+    * @code imprimir - se guarda en registro lo que cada cliente tiene que imprimir
+    * @param cadenaPendiente cadena a almacenar en el registro
+    * @param proceso es el procesos del cual hace referencia la cadena, para poder establecer a quien le pertenece
+    */
+    public void imprimir(String cadenaPendiente, String proceso) throws RemoteException;
 }
-/**
-* Docs Paquete Servidor
-* @code proceso contiene el proceso del paquete
-* procesoExiste Bandera para saber si un proceso existe o no
-*/
-class Paquete {
-    Procesos proceso;
-    boolean procesoExiste;//banderas
-    public Paquete(Procesos proceso, boolean procesoExiste){
-       this.proceso = proceso;
-       this.procesoExiste = procesoExiste;
-    }
- }
-/**
-* Docs Clase Proceso 
-* @code Contiene las variables que le dan informacion a un Proceso
-* Tambien podemos tomar Procesos como las entradas del usuario
-*
-* nombre nombre proceso
-* totalPaginas  total de paginas que tendra el proceso (diferente al total de invocaciones)
-* orden  orden de las invocaciones 
-* n_inv numero de invocaciones (solo usada en una funcion)
-*/
-class Procesos{ 
-    String nombre;  
-    int totalPaginas; 
-    String orden;     
-    int n_inv;		
-    public Procesos(String nombre, int totalPaginas, String orden, int n_inv){
-       this.nombre = nombre;
-       this.totalPaginas = totalPaginas;
-       this.orden = orden;
-       this.n_inv = n_inv;
-    }
- }
+
+
 //TERMINADO
