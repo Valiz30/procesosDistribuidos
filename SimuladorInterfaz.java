@@ -10,7 +10,7 @@ public interface SimuladorInterfaz extends Remote { //se crea la interfaz remota
     * @code Registra el proceso por medio del nombre
     * @param nombre Se utilizar par registrar el nombre del proceso
     */
-    public int registrar(String nombre) throws RemoteException;
+    public int registrar() throws RemoteException;
     /** 
     * @code recibe un paquete
     * @param paquete Es el paquete  que recibe en Paquete
@@ -36,7 +36,7 @@ public interface SimuladorInterfaz extends Remote { //se crea la interfaz remota
     * @code eliminarClientes - elimina el cliente tanto como usuario y servidor
     * @param nombre nombre del cliente a eliminar
     */
-    public void eliminarCliente(String nombre) throws RemoteException;
+    public void eliminarCliente(int idCliente) throws RemoteException;
     /** 
     * @code actualizarImprimir - actualiza los datos a imprimir por cada cliente
     * @param idCliente identificador para cada uno de los clientes
@@ -48,7 +48,9 @@ public interface SimuladorInterfaz extends Remote { //se crea la interfaz remota
     * @param proceso es el procesos del cual hace referencia la cadena, para poder establecer a quien le pertenece
     */
     public void imprimir(String cadenaPendiente, String proceso) throws RemoteException;
+    /** 
+    * @code verificarCliente - verifica que el nombre del proceso este permitido
+    * @param proceso es el nombre del proceso a verificar
+    */
+    public boolean verificarProceso(String proceso) throws RemoteException;
 }
-
-
-//TERMINADO
