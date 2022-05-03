@@ -42,7 +42,8 @@ public class SimuladorCliente{
             ListaProcesos listaProcesos = new ListaProcesos(datos, sInterfaz, nombreCliente); //Pasa la informacion para tener una lista de de estados de los procesos. que seran consultados al servidor
             HiloImprimir hiloImprimir = new HiloImprimir(datos, sInterfaz);
            
-            datos.setIdCliente(sInterfaz.registrar(nombreCliente)); //Se asigna al cliente en el registro con los demas clientes.
+            datos.setIdCliente(sInterfaz.registrar()); //Se asigna al cliente en el registro con los demas clientes.
+            System.out.println("idCliente: "+datos.getIdCliente());
             // start() inicializa el hilo de cada clase para iniciar
             interfaz.start();
             ejProceso.start();
@@ -65,4 +66,3 @@ public class SimuladorCliente{
         }
     }
 }
-//TERMINADO

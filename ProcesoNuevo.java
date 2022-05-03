@@ -42,7 +42,7 @@ public class ProcesoNuevo extends Thread{
             try{
                 // Se establecen valores para el nuevo paquete; Contador de referencias totales, Arreglo de procesos finalizados, contador de procesos finalizados
                 try {
-                    Thread.sleep(15000); // el hilo duerme durante 10 segundos
+                    Thread.sleep(50); // el hilo duerme durante 10 segundos
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ProcesoNuevo.class.getName()).log(Level.SEVERE, null, ex);
                 }

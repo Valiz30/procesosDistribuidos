@@ -35,13 +35,13 @@ public class HiloImprimir extends Thread{ // Clase hilo
             }
             try{
                 try {
-                    Thread.sleep(15000);
+                    Thread.sleep(50);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(HiloImprimir.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 cadenaImprimir = sInterfaz.actualizarImprimir(datos.getIdCliente());
                 cadenaImprimirChar = cadenaImprimir.toCharArray();
-                if(cadenaImprimir != ""){
+                if(cadenaImprimir.length() > 1){
                     for(int i = 0; i < cadenaImprimirChar.length; i++){
                         if(cadenaImprimirChar[i] == ','){
                             System.out.println("");
@@ -50,8 +50,9 @@ public class HiloImprimir extends Thread{ // Clase hilo
                         }
                     }
                     System.out.println();
+                    System.out.print(">");
                 }
-                System.out.print("> ");
+                
             }catch(Exception e) {
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();

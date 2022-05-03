@@ -44,7 +44,7 @@ public class ListaProcesos extends Thread{ // Clase hilo
             }
             try{
                 try {
-                    Thread.sleep(15000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ListaProcesos.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -54,7 +54,7 @@ public class ListaProcesos extends Thread{ // Clase hilo
                     //System.out.println("ESTADO PROCESOS: "+estadoProcesos[i]);
                     if(estadoProcesos[i] == true){
                         System.out.println("---------------------------------------------------------------------------------------------------");
-                        System.out.println("El proceso"+procesosCliente[i]+ "ha terminado de ejecutarse") ;
+                        System.out.println("El proceso "+procesosCliente[i]+ " ha terminado de ejecutarse") ;
                         System.out.println("---------------------------------------------------------------------------------------------------");
                         // Se elimina el proceso que marque el indice y se acomoda el registro
                         contProcesosCliente = datos.getContProcesosCliente();
@@ -69,6 +69,8 @@ public class ListaProcesos extends Thread{ // Clase hilo
                         contProcesosCliente--;
                         datos.setProcesosCliente(procesosCliente);
                         datos.setContProcesosCliente(contProcesosCliente);
+                        
+                        System.out.print(">");
                         break;
                     }
                 }

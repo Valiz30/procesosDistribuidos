@@ -7,7 +7,7 @@ import java.io.Serializable;
 * orden  orden de las invocaciones 
 * n_inv  numero de invocaciones (solo usada en una funcion)
 */
-
+import java.io.Serializable;
 public class Procesos implements Serializable{
     String nombre;  
     int totalPaginas;

@@ -146,46 +146,133 @@ public class SimuladorPrompt extends Thread {
     */
     Procesos prompt() throws InterruptedException{
         Procesos procesoNuevo = null;
-        int contRefTotales = 0;
+        int contRefTotales = 0, contadorEspacios = 0, contadorEspaciosReferencias = 0, contError = 0;
         int contProcesosCliente = 0;
         String comando = "";
         String[] procAux = new String[1];
         Scanner entrada = new Scanner(System.in);
-        boolean usar = true;
-        System.out.print("> ");
-        comando = entrada.nextLine();
-        //System.out.println(comando);
-        //en caso de que el usuario ponga el comando para salir 
-        if(comando.toLowerCase().equals("salir")){ //Revisa en minusculas si el comano es "salir"
+        boolean usar = true, espacios = false, simbolos = true, cadenaCorrecta = false, pagRef = false, refAceptada = false, indiceModificado = false, procesoPermitido = false;
+        while(procesoPermitido == false){
+            System.out.print(">");
+            comando = entrada.nextLine();
+            char[] comandoChar = comando.toCharArray();
+            if(comando.equals("salir") == false){
+                while(cadenaCorrecta == false){
+                    if(contError > 0){
+                        System.out.print(">");
+                        comando = entrada.nextLine();
+                        comandoChar = comando.toCharArray();
+                    }
+                    espacios = false;
+                    simbolos = true;
+                    cadenaCorrecta = false;
+                    pagRef = false;
+                    refAceptada = false;
+                    contadorEspacios = 0;
+                    contadorEspaciosReferencias = 0;
+                    if(comando.length() > 1){
+                        for(int i = 0; i < comandoChar.length; i++){
+                            if(comandoChar[i] == ' '){
+                                contadorEspacios++;
+                            }
+                            if(contadorEspacios > 0 && i < comandoChar.length - 1){
+                                if(comandoChar[i] == ' ' || comandoChar[i] == ','){
+                                    indiceModificado = true;
+                                    i++;
+                                }
+                                if((int)comandoChar[i] < 48 || (int)comandoChar[i] > 58){
+                                    simbolos = false;
+                                    break;
+                                }
+                                if(indiceModificado == true){
+                                    i--;
+                                    indiceModificado = false;
+                                }
+                                    
+                            }
+                            if(contadorEspacios > 2){
+                                if(comandoChar[i] == ' '){
+                                    if(contadorEspaciosReferencias == 0){
+                                        contadorEspaciosReferencias++;
+                                        pagRef = true;
+                                    }else{
+                                        pagRef = false;
+                                        break;
+                                    }
+                                    
+                                }
+                                if(comandoChar[i] == ',' && pagRef == true){
+                                    refAceptada = true;
+                                    if(i != comandoChar.length-1){
+                                        pagRef = false;
+                                        refAceptada = false;
+                                        contadorEspaciosReferencias = 0;
+                                    }
+                                }
+                            }
+                            if(contadorEspacios >= 3){
+                                espacios = true;
+                            }
+                        }
+                        if(espacios == true && simbolos == true && refAceptada == true){
+                            cadenaCorrecta = true;
+                        }
+                        if(cadenaCorrecta != true){
+                            contError++;
+                            System.out.println("DATOS INCORRECTOS");
+                        }
+                    }else{
+                        contError++;
+                        System.out.println("DATOS INCORRECTOS");
+                    }
+                }
+            }
+        
+            
+            
+            //System.out.println(comando);
+            //en caso de que el usuario ponga el comando para salir 
+            if(comando.toLowerCase().equals("salir")){ //Revisa en minusculas si el comano es "salir"
+                try{
+                    sInterfaz.eliminarCliente(datos.getIdCliente()); //Manda a eliminar al cliente
+                }catch(Exception e) {
+                    System.err.println("Servidor excepcion: "+ e.getMessage());
+                    e.printStackTrace();
+                }
+                //System.out.println("COMANDO SALIR");
+                datos.setSalir(true);
+                return procesoNuevo;//null
+            }
+            //agrega un proceso nuevo 
+            //System.out.println("SimuladorPrompt");
+            usar = true;
+            datos.setNombreHilo(nombreHilo);
+            /*
+            * Permite acceder a una variable
+            */
+            while(datos.getNombreHilo() != nombreHilo && usar == true){//hace esperar al hilo su turno
+                try {
+                    Thread.sleep(50);
+                    datos.setNombreHilo(nombreHilo);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(SimuladorPrompt.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            //actualizamos las variables
+            contProcesosCliente = datos.getContProcesosCliente();
+            procesosCliente = datos.getProcesosCliente();
+            procesoNuevo = registrarDatos(comando);//pide datos de proceso
             try{
-                sInterfaz.eliminarCliente(nombreCliente); //Manda a eliminar al cliente
+                if(sInterfaz.verificarProceso(procesoNuevo.getNombre())){
+                    procesoPermitido = true;
+                }else{
+                    System.out.println("NOMBRE DE PROCESO NO PERMITIDO");
+                }
             }catch(Exception e) {
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();
             }
-            //System.out.println("COMANDO SALIR");
-            datos.setSalir(true);
-            return procesoNuevo;//null
         }
-        //agrega un proceso nuevo 
-        //System.out.println("SimuladorPrompt");
-        usar = true;
-        datos.setNombreHilo(nombreHilo);
-        /*
-        * Permite acceder a una variable
-        */
-        while(datos.getNombreHilo() != nombreHilo && usar == true){//hace esperar al hilo su turno
-            try {
-                Thread.sleep(1000);
-                datos.setNombreHilo(nombreHilo);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(SimuladorPrompt.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        //actualizamos las variables
-        contProcesosCliente = datos.getContProcesosCliente();
-        procesosCliente = datos.getProcesosCliente();
-        procesoNuevo = registrarDatos(comando);//pide datos de proceso
         procesosCliente[contProcesosCliente] = procesoNuevo.nombre;//agrega el nuevo proceso a la lista de procesos del cliente
         //System.out.println("NOMBRE PROCESO CLIENTE: "+procesosCliente[contProcesosCliente]);
         contProcesosCliente++;
@@ -198,4 +285,3 @@ public class SimuladorPrompt extends Thread {
         return procesoNuevo;  
     }
 }
-// TERMINADO
