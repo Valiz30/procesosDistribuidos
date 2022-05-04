@@ -16,5 +16,3 @@ public class Memorias{ /*Entradas de usuario*/
         this.tamMemFis = tamMemFis;
     }
 }
-
-// TERMINADO

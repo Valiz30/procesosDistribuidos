@@ -1,16 +1,27 @@
 class Datos{
     /**    CLIENTE 
-    *   Docs Datos - Contiene las variables que utilizara el cliente.
-    *   contProcesosAct, contRefTotales, contProcesosCliente,contProcesosFinalizados - Contadores
+    *   Docs Datos - Contiene las variables que utilizaran los hilos del cliente.
+    *   contProcesosAct - cantidad de procesos que el servidor le asigno al cliente para ejecutar
+    *   contRefTotales - carga del cliente
+    *   contProcesosCliente - cantidad de procesos que le pertenecen al cliente (los que ingresa el usuario)
+    *   contProcesosFinalizados - cantidad de procesos que el cliente ha terminado de ejecutar de todos los que el servidor le envio
+    *   listaProcesosDespachar - contiene lo procesos a ejecutar por el cliente en orden
+    *   procesosCliente - son los procesos que el usuario ingreso en el Prompt
     *   registroTablaPaginas  Arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
+    *   nombreHilo - es el nombre del Hilo que va a tener permiso de acceder a esta clase, en un determinado tiempo
+    *   tablaPaginas - sera la tabla que contendra las entradas de la tabla de paginas
+    *   procesosPendientes - indica si el cliente tiene procesos pendientes a ejecutar
+    *   salir - indica si el cliente terminara de ejecutarse
+    *   listaProcesos - lista que contiene los procesos que el servidor le asigno al cliente, pero en desorden
+    *   idCliente - es el identificador del cliente
     */
     int[] contProcesosAct = {0}, contProcesosFinalizados = {0},registroTablaPaginas = new int[30]; 
     String[] listaProcesosDespachar, procesosCliente = new String[30], procesosFinalizados = new String[30];
-    String nombreCliente = "", nombreHilo = "";
+    String nombreHilo = "";
     Registro[] tablaPaginas;
     boolean procesosPendientes = false, salir = false;
     Procesos[] listaProcesos = new Procesos[30];
-    int carga, contRefTotales, contProcesosCliente, idCliente;
+    int contRefTotales, contProcesosCliente, idCliente;
     /**
     *   Datos()
     *   @param contProcesosAct Contador de los procesos actualess
@@ -26,7 +37,6 @@ class Datos{
         this.contRefTotales = 0;
         this.contProcesosCliente = 0;
         this.contProcesosFinalizados[0] = 0;
-        this.carga = 0;
         for(int i = 0; i < 30; i++){
             this.procesosFinalizados[i] = "0";
             this.listaProcesos[i] = new Procesos("", 0, "", 0);
@@ -45,9 +55,6 @@ class Datos{
     public synchronized boolean getSalir(){
         return this.salir;
     }
-    public synchronized String getNombreCliente(){
-        return this.nombreCliente;
-    }
     public synchronized int[] getContProcesosFinalizados() {
         return this.contProcesosFinalizados;
     }
@@ -59,9 +66,6 @@ class Datos{
     }
     public synchronized String[] getProcesosFinalizados(){
         return this.procesosFinalizados;
-    }
-    public synchronized int getCarga(){
-        return this.carga;
     }
     public synchronized Procesos[] getListaProcesos(){
         return this.listaProcesos;
@@ -93,9 +97,6 @@ class Datos{
     public synchronized void setSalir(boolean salir){
         this.salir = salir;
     }
-    public synchronized void setNombreCliente(String nombreCliente){
-        this.nombreCliente = nombreCliente;
-    }
     public synchronized void setContProcesosFinalizados(int[] contProcesosFinalizados) {
         this.contProcesosFinalizados = contProcesosFinalizados;
     }
@@ -107,9 +108,6 @@ class Datos{
     }
     public synchronized void setprocesosFinalizados(String[] procesosFinalizados){//pendiente pasar la bandera
         this.procesosFinalizados = procesosFinalizados;
-    }
-    public synchronized void setCarga(int carga){
-        this.carga = carga;
     }
     public synchronized void setListaProcesos(Procesos[] listaProcesos){
         this.listaProcesos = listaProcesos;
@@ -134,8 +132,3 @@ class Datos{
     }
 
 }
-
-//TERMINADO
-
-//getContadorProcesosCliente
-//getProcesosCliente and set

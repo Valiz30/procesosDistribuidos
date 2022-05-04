@@ -19,5 +19,3 @@ public class Registro{
         this.num_marco = num_marco;
     }
 }
-
-//TERMINADO

@@ -4,6 +4,20 @@ import java.util.logging.Logger;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 public class Ejecutar extends Thread{
+    /**    CLIENTE 
+    *   Docs Ejecutar
+    *   contProcesosAct - cantidad de procesos que el servidor le asigno al cliente para ejecutar
+    *   listaProcesosDespachar - contiene lo procesos a ejecutar por el cliente en orden
+    *   registroTablaPaginas  Arreglo que contiene el indice del proceso en la tabla de paginas (usando el mismo orden que en listaProcesosDespachar[][])
+    *   nombreHilo - es el nombre del Hilo que va a tener permiso de acceder a esta clase, en un determinado tiempo
+    *   tablaPaginas - sera la tabla que contendra las entradas de la tabla de paginas
+    *   listaProcesos - lista que contiene los procesos que el servidor le asigno al cliente, pero en desorden
+    *   memorias - son las memoria que se usaran en el proceso de ejecucion
+    *   memFisica - representa las localidades de la memoria fisica
+    *   procesosFinalizados - es la lista de nombres de los proceso que el cliente ha terminado de ejecutar
+    *   datos -  es la intancia de la clase Datos, que contiene los recursos compartidos entre los hilos
+    *   sInterfaz - instancia de la interfaz de la aplicacion
+    */
     Procesos[] listaProcesos;
     Memorias memorias;
     int TOTAL_P = 30, TOTAL_PAG = 50, AUX = 50,contRefTotales = 0;
@@ -11,16 +25,19 @@ public class Ejecutar extends Thread{
     int[] memFisica; //variable de la memoria fisica
     Registro[] tablaPaginas = new Registro[50]; 
     String[] listaProcesosDespachar, procesosFinalizados = new String[30];
-    String nombreCliente, nombreHilo = "Ejecutar";
+    String nombreHilo = "Ejecutar";
     Datos datos;
     SimuladorInterfaz sInterfaz;
-    public Ejecutar(Memorias memorias, Datos datos, String nombreCliente, SimuladorInterfaz sInterfaz){
+    /**
+    * Docs Ejecutar
+    * @code Constructor
+    */
+    public Ejecutar(Memorias memorias, Datos datos, SimuladorInterfaz sInterfaz){
         memFisica = new int[memorias.tamMemFis];
         for (int i = 0; i < memorias.tamMemFis; i++)
             memFisica[i] = 0;
         this.memorias = memorias;
         this.datos = datos;
-        this.nombreCliente = nombreCliente;
         this.sInterfaz = sInterfaz;
     }
 
@@ -32,7 +49,7 @@ public class Ejecutar extends Thread{
         
         boolean usar;
         while(true){
-            //System.out.println("Ejecutar");
+            //se establece que el hilo quiere hacer uso de los recursos compartidos
             usar = true;
             datos.setNombreHilo(nombreHilo);
             while(datos.getNombreHilo() != nombreHilo && usar == true){//identifica si el hilo puede actuar o si espera
@@ -43,8 +60,8 @@ public class Ejecutar extends Thread{
                     Logger.getLogger(Ejecutar.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            if(datos.getContProcesosAct()[0] > 0){
-                //actualizamos nuestras variables
+            if(datos.getContProcesosAct()[0] > 0){//realiza las operaciones si hay procesos pendientes a ejecutar
+                //almacena las variables que va a usar el hilo
                 contProcesosAct = datos.getContProcesosAct();
                 listaProcesosDespachar = datos.getListaProcesosDespachar();
                 listaProcesos = datos.getListaProcesos();
@@ -52,11 +69,12 @@ public class Ejecutar extends Thread{
                 tablaPaginas = datos.getTablaPaginas();
                 if(contProcesosAct[0] != 0){
                     try{
+                        //el hilo realiza la simulacion de los procesos
                         datos.setContProcesosAct(despacharProceso(contProcesosAct, listaProcesosDespachar, listaProcesos, procesosFinalizados, tablaPaginas));
-                        for(int i = 0; i < contProcesosAct[0]; i++){
+                        for(int i = 0; i < contProcesosAct[0]; i++){//calcula la carga resultante del cliente
                             contRefTotales = contRefTotales + listaProcesos[i].n_inv; 
                         }
-                        datos.setContRefTotales(contRefTotales);
+                        datos.setContRefTotales(contRefTotales);//actualiza la carga del Hilo 
                     }catch(InterruptedException e){
                         throw new RuntimeException(e);
                     };
@@ -70,7 +88,6 @@ public class Ejecutar extends Thread{
                 System.out.println("Terminar Ejecutar");
                 break;
             }
-            //System.out.println("Final Ejecutar");
             usar = false;
         }
     }
@@ -323,7 +340,7 @@ public class Ejecutar extends Thread{
                     if (listaProcesosDespachar[i] == nombre){
                             cadenaEnviar = cadenaEnviar + "," + " Proceso encontrado: "+listaProcesosDespachar[i];
                         try{
-                            sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[i]);
+                            sInterfaz.imprimir(cadenaEnviar, listaProcesosDespachar[i]);//envia la cadena de la operacion que acaba de realizar 
                         }catch(Exception e) {
                             System.err.println("Servidor excepcion: "+ e.getMessage());
                             e.printStackTrace();
@@ -383,9 +400,7 @@ public class Ejecutar extends Thread{
                 }
                 contadorArreglo++;
             }
-            //System.out.println("DESPLAZAMIENTO "+desplazamientoSep[0]);
             for(int x = 0; x < ordenDesplazamiento.length; x++)
-                //System.out.println(" orden DESPLAZAMIENTO "+ordenDesplazamiento[x]);
             /*Convertir la cadenas a int, tanto el numero de pagina como el numero de desplazamiento*/
             numpaginaInt = cadenaToEntero(numeroPaginaSep);
             desplazamientoInt = cadenaToEntero(desplazamientoSep);
@@ -580,7 +595,6 @@ public class Ejecutar extends Thread{
         total_referencias = contReferencias;
         if(total_referencias == 0){//si ya no hay mas referencias y/o invocaciones pendientes en el proceso 
             int[] contProcesosFinalizados = datos.getContProcesosFinalizados();
-            //System.out.println("contador procesos finalizados"+contProcesosFinalizados[0]);
             procesosFinalizados[contProcesosFinalizados[0]] = listaProcesosDespachar[0];
             contProcesosFinalizados[0]++;
             datos.setprocesosFinalizados(procesosFinalizados);
@@ -614,7 +628,7 @@ public class Ejecutar extends Thread{
     }
     /**
     *   despacharProceso 
-    *   @code  despacha al proceso dentro de la opcion 2 del menu
+    *   @code  despacha el proceso 
     *   @param contProcesosAct[]contador de procesos actuales
     *   @param listaProcesosDespachar array de string de los procesos a despachar
     *   @param listaProcesos[] lista de los procesos
@@ -642,14 +656,6 @@ public class Ejecutar extends Thread{
                         break;
                     }
             }
-
-        
-        /*printf("Total de referencias: ");
-        for(int i = 0; i < contador; i++){
-            printf("%i ", total_ref[i]);
-        }
-        printf("\n");*/
-
         // Ordena de manera ascendente la lista de procesos a despachar, registro de tabla de paginas
         for(int i = 0; i < contProcesosAct[0]; i++){
             pos = i;
@@ -682,5 +688,3 @@ public class Ejecutar extends Thread{
         return contProcesosAct;
     }
 }
-
-//TERMINADO

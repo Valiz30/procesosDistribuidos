@@ -12,52 +12,54 @@ public class SimuladorCliente{
     public static void main(String argv[]) {
             /*
             * Variables utilizadas en el main
-            * ejecutar para realizar las operaciones de los procesos
-            * prompt como vista de la consola
+            * tablaPaginas - tabla que paginas que se usara en todo el programa (por cliente)
+            * TOTAL_PROCESOS - total de procesos que manejara el cliente
+            * listaProcesosDespachar - contiene el nombre de los procesos en orden
+            * memorias - contiene las memorias que se usaran en todo el programa (por cliente), Informacion de la memoria -> tamano de pagina,  virutal y fisica
+            * contProcesosAct - total de procesos a ejecutar por el cliente
+            * registroTablaPaginas - contiene los indices que le corresponde a cada proceso en la tabla de paginas
+            * datos - instancia de la clase Datos
             */
-    
         if(argv.length != 1) { 
             System.out.println("Usage: java SimuladorCliente machineName");
             System.exit(0);
         }
         try {
-            Registro[] tablaPaginas = new Registro[100]; //Creacion de la tabla de Paginas con su informacion.
+            Registro[] tablaPaginas = new Registro[100];
             for(int i = 0; i < 100; i++){
-                tablaPaginas[i] = new Registro(0,0,0,0,0);
+                tablaPaginas[i] = new Registro(0,0,0,0,0);//inicializa la tabla de paginas
             }
-            int TOTAL_PROCESOS = 30, idCliente = 0; // El numero de procesos permitidos
-            String[] listaProcesosDespachar = new String[TOTAL_PROCESOS]; //arreglo que contiene el orden de los procesos a despachar
-            Memorias memorias = new Memorias(8,4194304,2097152); // Informacion de la memoria -> tamano de pagina,  virutal y fisica
-            int[] contProcesosAct = {0},registroTablaPaginas = new int[TOTAL_PROCESOS]; //contadores
-            //contProcesosActuales -> Procesos que tiene el cliente para ejecutar
-            //registroTablaPaginas -> Registro que contiene el indice que contiene los procesos a despachar dentro e la tabla de paginas
-            Datos datos = new Datos(contProcesosAct, registroTablaPaginas, listaProcesosDespachar, tablaPaginas); //Informacion que contiene el cliente pasandole lo que necesita 
-            String nombreCliente = "//" + argv[0] + "/SimuladorServidor"; //Se obtiene el nombre desde el arv[] y se guarda en nombreCliente
+            int TOTAL_PROCESOS = 30;
+            String[] listaProcesosDespachar = new String[TOTAL_PROCESOS];
+            Memorias memorias = new Memorias(8,4194304,2097152); 
+            int[] contProcesosAct = {0}, registroTablaPaginas = new int[TOTAL_PROCESOS];
+            Datos datos = new Datos(contProcesosAct, registroTablaPaginas, listaProcesosDespachar, tablaPaginas);  
+            String nombreCliente = "//" + argv[0] + "/SimuladorServidor"; //Se obtiene el nombre desde el argv[]
           
           
             SimuladorInterfaz sInterfaz = (SimuladorInterfaz) Naming.lookup(nombreCliente);  //con la interfaz SimuladorInterfaz remoto en el registro con lookup
-            SimuladorPrompt interfaz = new SimuladorPrompt(datos, nombreCliente, sInterfaz); //Se crea el simuladorPrompt con la informacion y el nombre del cliente
-            Ejecutar ejProceso = new Ejecutar(memorias, datos, nombreCliente, sInterfaz); //Se pasa la informacion a la clase ejecutar para la ejecucion de los procesos
-            ProcesoNuevo procesoNuevo = new ProcesoNuevo(datos, sInterfaz, nombreCliente); // Pasa la informacion para la actualizacioin de carga y procesosFinalizados con la ayuda de la implementacion SimuladorInterfaz
-            ListaProcesos listaProcesos = new ListaProcesos(datos, sInterfaz, nombreCliente); //Pasa la informacion para tener una lista de de estados de los procesos. que seran consultados al servidor
-            HiloImprimir hiloImprimir = new HiloImprimir(datos, sInterfaz);
+            SimuladorPrompt interfaz = new SimuladorPrompt(datos, sInterfaz); //Se crea una instancia del hilo que hara de interfaz para el usuario
+            Ejecutar ejProceso = new Ejecutar(memorias, datos, sInterfaz); //Se crea una instancia del hilo que ejecutara los procesos
+            ProcesoNuevo procesoNuevo = new ProcesoNuevo(datos, sInterfaz); // Se crea una instancia del hilo que solicitara procesos nuevo al servidor, ademas de mandar los que ya termino de ejecutar
+            ListaProcesos listaProcesos = new ListaProcesos(datos, sInterfaz); //Se crea una instancia del hilo que pedira una actualiacion del estado de sus procesos
+            HiloImprimir hiloImprimir = new HiloImprimir(datos, sInterfaz); // Se cre una instancia del hilo que imprimira las operaciones que se realizan sobre sus propios procesos
            
-            datos.setIdCliente(sInterfaz.registrar()); //Se asigna al cliente en el registro con los demas clientes.
-            System.out.println("idCliente: "+datos.getIdCliente());
-            // start() inicializa el hilo de cada clase para iniciar
+            datos.setIdCliente(sInterfaz.registrar()); //Se registra el cliente en el servidor
+            System.out.println("idCliente: "+datos.getIdCliente());//Imprime el identificador del Hilo
+            // start() inicia la ejecucion de cada uno de los hilos
             interfaz.start();
             ejProceso.start();
             procesoNuevo.start();
             listaProcesos.start();
             hiloImprimir.start();
-            try{
+            try{// join() espera a que terminen de ejecutarse todos lo hilos
                 interfaz.join();
                 ejProceso.join();
                 procesoNuevo.join();
                 listaProcesos.join();
                 hiloImprimir.join();
             }catch(InterruptedException e){;}
-            System.exit(0);
+            System.exit(0);//sale del programa
 
         }catch(Exception e) {
             //Capta alguna excepcion y manda el mensaje a la consola

@@ -44,4 +44,3 @@ public class Procesos implements Serializable{
         return this.n_inv;
     }
 }
-//TERMINADO
