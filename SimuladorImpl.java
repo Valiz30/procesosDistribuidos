@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInterfaz { 
+public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInterfaz{ 
    /**
    * Docs SimuladorImpl SERVIDOR
    * @code Creacion de la clase remota que comunica el objeto remoto
@@ -14,7 +14,7 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
    */
    final int TOTAL_CLIENTES = 5, TOTAL_PAQUETES = 30, TOTAL_PROCESOS = 30, UMBRAL = 20; //variables constantes
    int[] idCliente = new int[TOTAL_CLIENTES], contadorProcesosCliente = new int[TOTAL_CLIENTES]; //identificadores de los clientes, contador del total de clientes en linea
-   int contClientAct = 0, contPaquetesPendientes = 0, contProcFinalizados = 0; //contadores
+   int contClientAct = 0, contPaquetesPendientes = 0, contProcFinalizados = 0; //contadores, contProcFinalizados - contador de procesos generales en todo el servidor
    Paquete[] paquetesPendientes = new Paquete[TOTAL_PAQUETES];// registro de paquetes/procesos que esperan a ser ejecutados
    Procesos procesoNull = new Procesos("nombre", 0, "orden", 0); //Para iniciar la instancia de la clase Paquetes
    String[] procFinalizadosNombre = new String[TOTAL_PROCESOS], cadenaCliente = new String[TOTAL_CLIENTES]; //nombre de todos los procesos en el cliente, cadena pendiente a imprimir por cliente
@@ -65,6 +65,15 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
    */
    public synchronized void eliminarCliente(int idCliente){
       estadoClientes[idCliente] = false; //se "desocupa" el identificador
+      //elimina de todos los registros los datos del cliente
+      cadenaCliente[idCliente] = "";
+      contadorProcesosCliente[idCliente] = 0;
+      List<String> procesosAux = new ArrayList();
+      for(int i = 0; i < TOTAL_PAQUETES; i++){
+         procesosAux.add(i,"");
+      }
+      procesosClientes.add(idCliente, procesosAux);
+      procesosClientes.remove(idCliente++);
       contClientAct--; // Se decrementa el total de clientes actuales en el servidor
    }
    /**
@@ -96,13 +105,13 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
    */
    public synchronized boolean recibir(Paquete paquete, int idCliente){
       List<String> procesosAux = new ArrayList();
-      for(int i = 0; i < 30; i++){
+      for(int i = 0; i < TOTAL_PAQUETES; i++){
          procesosAux.add(i,"");
       }
-      if(contPaquetesPendientes < 30){ // 30 es el numero maximo de paquetes
+      if(contPaquetesPendientes < TOTAL_PAQUETES){ // 30 es el numero maximo de paquetes
          paquetesPendientes[contPaquetesPendientes] = paquete; // Se agrega un nuevo paquete pendiente
          contPaquetesPendientes++; // Incrementa el contador de paquetes pendientes
-         procFinalizadosNombre[contProcFinalizados] = paquete.getProceso().nombre;
+         procFinalizadosNombre[contProcFinalizados] = paquete.getProceso().nombre;///-----------------------------------
          estadoProcesos[contProcFinalizados] = false; // Se coloca como falso el estado del proceso hasta que se procese
          for(int i = 0; i < contClientAct; i++){//se añade el nombre del proceso a la lista que le corresponde
             if(i == idCliente){//cada cliente tiene su propia lista
@@ -167,6 +176,7 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
    */
    public synchronized boolean[] actualizarProceso(String[] nombreProcesos, int contProcesosCliente){
       boolean[] verProceso; 
+      int idCliente = 0;
       if(contProcesosCliente > 0){//Si el cliente tiene al menos un proceso
          verProceso = new boolean[nombreProcesos.length];// se "inicializa"  un arreglo que contendra el estado de cada uno de los procesos del cliente
          for(int i = 0; i < contProcesosCliente; i++){ // se recorre los procesos del cliente
@@ -174,7 +184,27 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
                if(nombreProcesos[i].equals(procFinalizadosNombre[j])){ // si encuentra el proceso en el registro del servidor 
                   verProceso[i] = estadoProcesos[j]; //en la variable que contendra el estado de cada uno de los procesos, se le asigna el estado que tiene en el servidor
                   if(estadoProcesos[j] == true){//en el caso de que algun proceso ya haya terminado de ejecutarse
-                     for(int k = j; k < contProcFinalizados; k++){// se elimina el proceso de los registros del servidor
+                     /*Elimina el proceso de los registros*/
+                     List<String> aux = new ArrayList();
+                     List<String> procesosAux = new ArrayList();
+                     for(int x = 0; x < TOTAL_PAQUETES; x++){
+                        procesosAux.add(x,"");
+                     }
+                     for(int k = 0; k < contClientAct; k++){
+                        aux = procesosClientes.get(k);
+                        for(int l = 0; l < contadorProcesosCliente[k]; l++){
+                           if(aux.get(l).equals(procFinalizadosNombre[j])){
+                              procesosAux = procesosClientes.get(k);
+                              procesosAux.remove(l);
+                              procesosClientes.add(k, procesosAux);
+                              procesosClientes.remove(k++);
+                              k--;
+                              idCliente = k;
+                           }
+                        }
+                     }
+                     
+                     for(int k = j; k < contProcFinalizados; k++){
                         if(k == TOTAL_PROCESOS-1){
                            estadoProcesos[k] = false;
                            procFinalizadosNombre[k] = "";
@@ -184,6 +214,7 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
                         procFinalizadosNombre[k] = procFinalizadosNombre[k+1];
                      }
                      contProcFinalizados--;
+                     contadorProcesosCliente[idCliente]--;
                   }
                   break;
                }
