@@ -60,7 +60,7 @@ public class HiloImprimir extends Thread{ // Clase hilo
                     System.out.println();
                     System.out.print(">");
                 }
-                
+                cadenaImprimir = "";
             }catch(Exception e) {
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();

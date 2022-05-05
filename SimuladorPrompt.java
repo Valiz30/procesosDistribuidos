@@ -44,6 +44,10 @@ public class SimuladorPrompt extends Thread {
         while(true){// el hilo se ejecutara de manera indefinida hasta que el cliente lo indique
             try {
                 paquete.proceso = prompt();//funcion que pide el proceso y retorna el proceso con sus datos
+                if(datos.getSalir() == true){//si el usuario quiere terminar la ejecucion del programa, se sale del ciclo y termina su ejecucion
+                    System.out.println("Terminar SimuladorPrompt");
+                    break;
+                }
             } catch (InterruptedException ex) {
                 Logger.getLogger(SimuladorPrompt.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -56,10 +60,6 @@ public class SimuladorPrompt extends Thread {
             }catch(Exception e) {
                 System.err.println("Servidor excepcion: "+ e.getMessage());
                 e.printStackTrace();
-            }
-            if(datos.getSalir() == true){//si el usuario quiere terminar la ejecucion del programa, se sale del ciclo y termina su ejecucion
-                System.out.println("Terminar SimuladorPrompt");
-                break;
             }
             usar = false;//establece que ya no quiere usar los recursos compartidos
         }
