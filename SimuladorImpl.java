@@ -86,8 +86,12 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
    */
    public synchronized boolean verificarProceso(String proceso){ 
       boolean permitido = true;
-      for(int i = 0; i < contPaquetesPendientes; i++){
-         if(paquetesPendientes[i].getProceso().getNombre().equals(proceso)){//verifica si el nuevo nombre ya se encuenta ocupado
+      //System.out.println("ENTRA A VERIFICAR NOMBRE");
+      //System.out.println("Nombre: "+proceso);
+      for(int i = 0; i < contProcFinalizados; i++){
+         //System.out.println("Se compara con el proceso: "+procFinalizadosNombre[i]);
+         if(procFinalizadosNombre[i].equals(proceso)){//verifica si el nuevo nombre ya se encuenta ocupado
+            //System.out.println("SON IGUALES");
             permitido = false;
             break;
          }
@@ -112,6 +116,7 @@ public class SimuladorImpl extends UnicastRemoteObject implements SimuladorInter
          paquetesPendientes[contPaquetesPendientes] = paquete; // Se agrega un nuevo paquete pendiente
          contPaquetesPendientes++; // Incrementa el contador de paquetes pendientes
          procFinalizadosNombre[contProcFinalizados] = paquete.getProceso().nombre;///-----------------------------------
+         //System.out.println("EL PROCESO QUE SE AÑADIO ES: "+procFinalizadosNombre[contProcFinalizados]);
          estadoProcesos[contProcFinalizados] = false; // Se coloca como falso el estado del proceso hasta que se procese
          for(int i = 0; i < contClientAct; i++){//se añade el nombre del proceso a la lista que le corresponde
             if(i == idCliente){//cada cliente tiene su propia lista
