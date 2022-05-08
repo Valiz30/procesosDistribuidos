@@ -1,13 +1,13 @@
 import java.io.Serializable;
 
 /**
-* @code Clase Proceso del cliente - SERVIDOR
-* nombre nombre del proceso
+* @code Clase Proceso del cliente  CLIENTE
+* nombre nombre proceso
 * totalPaginas  total de paginas que tendra el proceso (diferente al total de invocaciones)
 * orden  orden de las invocaciones 
 * n_inv  numero de invocaciones (solo usada en una funcion)
 */
-
+import java.io.Serializable;
 public class Procesos implements Serializable{
     String nombre;  
     int totalPaginas;

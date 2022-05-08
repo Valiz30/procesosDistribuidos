@@ -56,9 +56,6 @@ public class ListaProcesos extends Thread{ // Clase hilo
                 procesosCliente = datos.getProcesosCliente();//obtiene la lista de procesos del cliente
                 for(int i = 0; i < estadoProcesos.length; i++){//recorre la lista de estados
                     if(estadoProcesos[i] == true){//si encuentra que un proceso ha terminado de ejecutarse se lo indica al usuario
-                        System.out.println("---------------------------------------------------------------------------------------------------");
-                        System.out.println("El proceso "+procesosCliente[i]+ " ha terminado de ejecutarse") ;
-                        System.out.println("---------------------------------------------------------------------------------------------------");
                         // Se elimina el proceso que marque el indice y se acomoda el registro
                         contProcesosCliente = datos.getContProcesosCliente();//obtiene el total de procesos del cliente
                         for(int j = i; j < contProcesosCliente; j++){//se elimina del registro de procesos del cliente.
@@ -71,8 +68,6 @@ public class ListaProcesos extends Thread{ // Clase hilo
                         contProcesosCliente--;//decrementa los procesos del cliente
                         datos.setProcesosCliente(procesosCliente);
                         datos.setContProcesosCliente(contProcesosCliente);
-                        
-                        System.out.print(">");
                         break;
                     }
                 }

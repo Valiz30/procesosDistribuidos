@@ -593,12 +593,20 @@ public class Ejecutar extends Thread{
             }
         }
         total_referencias = contReferencias;
+        String cadena = "";
         if(total_referencias == 0){//si ya no hay mas referencias y/o invocaciones pendientes en el proceso 
             int[] contProcesosFinalizados = datos.getContProcesosFinalizados();
             procesosFinalizados[contProcesosFinalizados[0]] = listaProcesosDespachar[0];
             contProcesosFinalizados[0]++;
             datos.setprocesosFinalizados(procesosFinalizados);
             datos.setContProcesosFinalizados(contProcesosFinalizados);
+            cadena = cadena + "," + "---------------------------------------------------------------------------------------------------" + "," + "El proceso: " + listaProcesosDespachar[0] + " ha terminado de ejecutarse" + "," + "---------------------------------------------------------------------------------------------------" + ",";
+            try{
+                sInterfaz.imprimir(cadena, listaProcesosDespachar[0]);
+            }catch(Exception e) {
+                System.err.println("Servidor excepcion: "+ e.getMessage());
+                e.printStackTrace();
+            }
             // Se elimina el proceso que marque el indice y se acomoda el registro
             for(int i = 0; i < contProcesosAct[0]; i++){//se elimina de las estructuras ordenadas
                 listaProcesosDespachar[i] = listaProcesosDespachar[i+1];
